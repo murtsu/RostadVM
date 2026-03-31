@@ -1,0 +1,136 @@
+{
+  "schema_version": "1.0",
+  "description": "JSON schemas for all PPM input and output message types.",
+
+  "common_fields": {
+    "note": "Every message includes these fields in addition to its type-specific fields",
+    "schema_version": "string — always 1.0",
+    "message_type": "string — see type list in CLAUDE.md",
+    "timestamp": "string — ISO 8601",
+    "from_role": "string — role abbreviation of sender",
+    "to_role": "string — role abbreviation of recipient",
+    "message_id": "string — unique ID following CLAUDE.md convention e.g. TAS-PPM-0001",
+    "status": "string — enum: unread | pending | done"
+  },
+
+  "schemas": {
+
+    "task_assignment": {
+      "description": "PPM assigns a task to an SPM. Written to ppm_to_spm.json outbox.",
+      "type_specific_fields": {
+        "task_id": "string — unique task identifier e.g. TSK-PPM-0001",
+        "title": "string — one line task description",
+        "description": "string — full task description with enough context to begin work",
+        "subsystem": "string — subsystem this task belongs to",
+        "priority": "string — enum: critical | high | normal | low",
+        "acceptance_criteria": "array of strings — measurable conditions that must be true for this task to be done",
+        "dependencies": "array of strings — task_ids that must be complete before this task can start",
+        "design_references": "array of strings — file paths to relevant spec documents",
+        "deadline": "string — ISO 8601 date or empty string",
+        "estimated_complexity": "string — enum: small | medium | large | unknown"
+      },
+      "example": {
+        "schema_version": "1.0",
+        "message_type": "task_assignment",
+        "timestamp": "2026-03-31T10:00:00Z",
+        "from_role": "ppm",
+        "to_role": "spm",
+        "message_id": "TAS-PPM-0001",
+        "status": "unread",
+        "task_id": "TSK-PPM-0001",
+        "title": "Implement VmHandle struct and lifecycle methods",
+        "description": "Implement the VmHandle struct as defined in the interface spec. Must implement the Configurable and Restorable traits. Lifecycle methods: create, start, stop, destroy. All methods return Result<T, VmError>.",
+        "subsystem": "vm_lifecycle",
+        "priority": "high",
+        "acceptance_criteria": [
+          "VmHandle compiles with no warnings",
+          "All four lifecycle methods implemented and return correct types",
+          "Unit tests pass with at least 90% coverage",
+          "Code Reviewer has approved",
+          "Documentation complete for all public items"
+        ],
+        "dependencies": [],
+        "design_references": [".agents/state/sd_state.json"],
+        "deadline": "2026-04-14",
+        "estimated_complexity": "medium"
+      }
+    },
+
+    "status_report": {
+      "description": "Any internal role sends their daily status to PPM. Appended to ppm_inbox.json.",
+      "type_specific_fields": {
+        "report_date": "string — ISO 8601 date",
+        "reporting_role": "string — role abbreviation",
+        "overall_status": "string — enum: green | amber | red",
+        "summary": "string — one to two sentences",
+        "active_tasks": "array of active_task_object",
+        "completed_tasks": "array of strings — task IDs completed since last report",
+        "blocked_tasks": "array of blocked_task_object",
+        "coder_queue_depth": "number — tasks waiting per coder in this SPM's pool. Only applies to SPM. Use 0 for other roles.",
+        "active_coder_count": "integer — number of coders currently active. Only applies to SPM. Use 0 for other roles.",
+        "issues": "array of strings — anything the PPM should know that does not rise to an escalation",
+        "requests": "array of strings — resource or tooling requests"
+      },
+      "active_task_object": {
+        "task_id": "string",
+        "title": "string",
+        "status": "string — enum: assigned | in_progress | in_review | qa_pending",
+        "progress_note": "string — one sentence"
+      },
+      "blocked_task_object": {
+        "task_id": "string",
+        "title": "string",
+        "blocked_since": "string — ISO 8601",
+        "reason": "string",
+        "requires_ppm_action": "boolean"
+      }
+    },
+
+    "task_completion": {
+      "description": "SPM signals to PPM that a task is fully done — QA approved, documentation complete, code reviewed. Appended to ppm_inbox.json.",
+      "type_specific_fields": {
+        "task_id": "string — task that is complete",
+        "completed_at": "string — ISO 8601",
+        "qa_sign_off_id": "string — message_id of QA approval",
+        "cr_sign_off_id": "string — message_id of Code Reviewer approval",
+        "doc_sign_off_id": "string — message_id of Documenter confirmation, or empty string if no docs required",
+        "artifacts": "array of strings — file paths to deliverables produced",
+        "notes": "string — anything PPM should know about this completion, or empty string"
+      }
+    },
+
+    "status_report_request": {
+      "description": "PPM requests a status_report from a role. Written to that role's inbox. Used to trigger the daily consolidation cycle.",
+      "type_specific_fields": {
+        "report_due_by": "string — ISO 8601 datetime by which the status_report must be in PPM's inbox",
+        "report_date": "string — ISO 8601 date the report should cover"
+      }
+    },
+
+    "coder_scale_decision": {
+      "description": "PPM records a coder scaling decision. Written to ppm_state.json scaling_log AND sent to PM inbox as a notification.",
+      "type_specific_fields": {
+        "direction": "string — enum: scale_up | scale_down",
+        "trigger_signal": "string — description of the queue-depth signal that triggered this decision",
+        "spm_reports_used": "array of strings — SPM role abbreviations whose reports contributed to the trigger",
+        "previous_coder_count": "integer",
+        "new_coder_count": "integer",
+        "rationale": "string — mandatory, never empty",
+        "effective_from": "string — ISO 8601"
+      }
+    },
+
+    "dependency_conflict": {
+      "description": "PPM writes to PM inbox when a cross-subsystem dependency conflict cannot be resolved at PPM level.",
+      "type_specific_fields": {
+        "task_id_a": "string — first task in the conflict",
+        "task_id_b": "string — second task in the conflict",
+        "spm_a": "string — role abbreviation of SPM owning task A",
+        "spm_b": "string — role abbreviation of SPM owning task B",
+        "conflict_description": "string — full description of the conflict",
+        "proposed_resolution": "string — PPM recommendation or empty string",
+        "blocking_tasks": "array of strings — task IDs blocked until this resolves"
+      }
+    }
+  }
+}
