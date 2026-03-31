@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "state_owner": "ppm",
+  "last_updated": "2026-03-31T00:00:00Z",
+
+  "operational_status": {
+    "overall_status": "green",
+    "active_sprint": "",
+    "total_tasks": 0,
+    "tasks_backlog": 0,
+    "tasks_assigned": 0,
+    "tasks_in_progress": 0,
+    "tasks_in_review": 0,
+    "tasks_qa_pending": 0,
+    "tasks_done": 0,
+    "tasks_blocked": 0
+  },
+
+  "coder_pool": {
+    "active_coder_count": 0,
+    "scale_up_threshold": {
+      "description": "Scale UP when this condition is met",
+      "condition": "Two or more SPMs report queue_depth > 3 tasks waiting per coder in the same reporting cycle"
+    },
+    "scale_down_threshold": {
+      "description": "Scale DOWN when this condition is met for two consecutive cycles",
+      "condition": "All SPMs report queue_depth < 1 task waiting per coder",
+      "consecutive_cycles_at_threshold": 0
+    }
+  },
+
+  "spm_registry": [],
+
+  "backlog": [],
+
+  "completed_tasks": [],
+
+  "active_blockers": [],
+
+  "consolidation": {
+    "last_report_sent_to_pm": "",
+    "last_status_requests_sent": "",
+    "pending_status_reports_from": [],
+    "report_cycle_hours": 24
+  },
+
+  "sequence_counters": {
+    "TAS": 0,
+    "TSK": 0,
+    "SRQ": 0,
+    "CSD": 0,
+    "ESC": 0,
+    "DCF": 0,
+    "NTF": 0,
+    "RPT": 0
+  },
+
+  "scaling_log": [],
+
+  "decisions_log": []
+}

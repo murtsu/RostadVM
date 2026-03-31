@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "state_owner": "pm",
+  "last_updated": "2026-03-31T00:00:00Z",
+  "project": {
+    "name": "VM Framework",
+    "status": "active",
+    "overall_status": "green",
+    "objective": "Build a Libvirt-based virtual machine management framework with a patent-pending copy-on-write restore mechanism. Five-second full system restore. Point and click interface. Open source. Written in Rust.",
+    "current_milestone": "M1",
+    "milestones": [
+      {
+        "milestone_id": "M1",
+        "name": "Core agent organisation",
+        "description": "All 15 agent roles defined, CLAUDE.md complete, PM agent operational, communication protocol established",
+        "target_date": "2026-04-30",
+        "status": "in_progress",
+        "deliverables": [
+          "CLAUDE.md v1.0",
+          "All role definition files",
+          "All schemas",
+          "Initialised state and inbox files"
+        ]
+      },
+      {
+        "milestone_id": "M2",
+        "name": "Rust rewrite foundation",
+        "description": "Core VM lifecycle management in Rust. Create, start, stop, destroy. Libvirt integration.",
+        "target_date": "2026-06-30",
+        "status": "planned",
+        "deliverables": []
+      },
+      {
+        "milestone_id": "M3",
+        "name": "CoW restore mechanism",
+        "description": "Patent-pending copy-on-write restore implemented in Rust. Five-second restore validated.",
+        "target_date": "2026-08-31",
+        "status": "planned",
+        "deliverables": []
+      }
+    ],
+    "constraints": [
+      "Runs on Linux only",
+      "Requires Libvirt support on target system",
+      "No custom kernel modifications",
+      "No proprietary dependencies",
+      "CoW mechanism is patent pending — implementation must not deviate from patent claims without Marko approval"
+    ],
+    "risks": [
+      {
+        "risk_id": "RSK-PM-0001",
+        "description": "Rust learning curve may slow initial implementation velocity",
+        "probability": "high",
+        "impact": "medium",
+        "mitigation": "Agents act as senior Rust reviewers. Design language spec enforces idioms. Bash prototype remains reference implementation.",
+        "owner": "pm",
+        "status": "open"
+      },
+      {
+        "risk_id": "RSK-PM-0002",
+        "description": "Patent pending status creates constraints on what can be published in the open source repository",
+        "probability": "medium",
+        "impact": "high",
+        "mitigation": "Marko reviews any commit touching the CoW mechanism before merge. Patent attorney consulted before publication.",
+        "owner": "pm",
+        "status": "open"
+      }
+    ]
+  },
+  "open_client_requests": [],
+  "open_escalations": [],
+  "open_decisions": [],
+  "last_report_sent": "",
+  "next_report_due": "",
+  "sequence_counters": {
+    "DEC": 0,
+    "CRP": 0
+  },
+  "role_status": {
+    "sd": "unknown",
+    "ppm": "unknown",
+    "spm": "unknown",
+    "tm": "unknown",
+    "mtm": "unknown",
+    "cr": "unknown",
+    "sec": "unknown",
+    "ux": "unknown",
+    "doc": "unknown",
+    "test": "unknown",
+    "int": "unknown",
+    "qa": "unknown",
+    "cmvc": "unknown",
+    "infra": "unknown"
+  },
+  "decisions_log": []
+}
