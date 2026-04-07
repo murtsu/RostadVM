@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "state_owner": "sd",
+  "last_updated": "2026-03-31T00:00:00Z",
+
+  "design_status": {
+    "overall_status": "green",
+    "waiting_for_signoff": false,
+    "pending_reflection_id": "",
+    "note": "When waiting_for_signoff is true, SD takes no design actions until reflection_signoff arrives. This is a hard stop."
+  },
+
+  "analysis_inputs": [],
+
+  "subsystems": [
+    {
+      "note": "One entry per subsystem as design progresses. Add when first analysis is received.",
+      "subsystem_id": "string — e.g. vm_lifecycle",
+      "name": "string",
+      "spec_version": "string — current released version e.g. 1.0",
+      "spec_path": "string — file path to spec document",
+      "spec_status": "string — enum: not_started | reflection_pending | signoff_pending | released | under_correction",
+      "reflection_id": "string — message_id of the design_reflection sent for this subsystem",
+      "signoff_id": "string — message_id of the reflection_signoff received",
+      "release_id": "string — message_id of the spec_release sent",
+      "open_correction_requests": [],
+      "open_disputes": [],
+      "interfaces": [],
+      "data_exchanges": []
+    }
+  ],
+
+  "pending_correction_requests": [],
+
+  "pending_disputes": [],
+
+  "sequence_counters": {
+    "DRF": 0,
+    "SPR": 0,
+    "DDC": 0,
+    "SCR": 0,
+    "SCR_RESP": 0,
+    "BRS": 0,
+    "NTF": 0,
+    "ESC": 0
+  },
+
+  "decisions_log": [],
+
+  "open_questions_to_marko": []
+}
