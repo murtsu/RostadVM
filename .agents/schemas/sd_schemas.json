@@ -1,0 +1,170 @@
+{
+  "schema_version": "1.0",
+  "description": "JSON schemas for all SD input and output message types.",
+
+  "common_fields": {
+    "note": "Every message includes these fields in addition to its type-specific fields",
+    "schema_version": "string — always 1.0",
+    "message_type": "string — see type list in CLAUDE.md",
+    "timestamp": "string — ISO 8601",
+    "from_role": "string — role abbreviation of sender",
+    "to_role": "string — role abbreviation of recipient",
+    "message_id": "string — unique ID following CLAUDE.md convention",
+    "status": "string — enum: unread | pending | done"
+  },
+
+  "schemas": {
+
+    "design_reflection": {
+      "description": "SD produces this document after consuming Marko's analysis. Sent to Marko for sign-off before any spec is released. SD enters a waiting state until reflection_signoff is received. This is Fix 1 from Org Structure v2.0.",
+      "destination": "Written to sd_to_client.json outbox. Notification sent to PM inbox for relay to Marko.",
+      "type_specific_fields": {
+        "analysis_source": "string — file path or description of the Marko analysis document consumed",
+        "what_was_understood": "string — SD's full summary of what it understood from the analysis. Detailed. No omissions.",
+        "what_is_being_designed": "string — what interfaces, subsystems, and data exchange contracts SD intends to produce",
+        "assumptions_made": "array of strings — explicit list of every assumption made where the analysis was silent. Each assumption is a statement of fact SD is treating as true until corrected.",
+        "open_questions": "array of strings — things SD could not determine from the analysis and needs Marko to answer before design can be completed",
+        "proposed_subsystems": "array of subsystem_object",
+        "estimated_spec_count": "integer — how many interface specification documents this analysis will produce"
+      },
+      "subsystem_object": {
+        "subsystem_id": "string — e.g. vm_lifecycle, cow_engine, storage_pool",
+        "name": "string — human readable name",
+        "purpose": "string — one sentence",
+        "interfaces_to_define": "array of strings — what interfaces SD expects to specify for this subsystem"
+      },
+      "example_assumption": "The CoW mechanism operates on qcow2 image format exclusively. If other formats are required this assumption must be corrected before interface design begins."
+    },
+
+    "reflection_signoff": {
+      "description": "Marko's sign-off on a design_reflection document. SD waits for this before releasing any specs. Written by PM on Marko's behalf after consulting him.",
+      "destination": "Written to pm_to_sd.json outbox. Notification sent to sd_inbox.json.",
+      "type_specific_fields": {
+        "in_response_to": "string — message_id of the design_reflection being approved or corrected",
+        "decision": "string — enum: approved | approved_with_corrections | rejected",
+        "corrections": "array of strings — specific corrections to SD's understanding. Empty array if approved without corrections.",
+        "answered_questions": "array of answered_question_object — responses to SD's open questions",
+        "additional_context": "string — any additional analysis context Marko wants to provide, or empty string"
+      },
+      "answered_question_object": {
+        "question": "string — the original open question from design_reflection",
+        "answer": "string — Marko's answer"
+      }
+    },
+
+    "spec_release": {
+      "description": "SD releases a completed interface specification document downstream to PPM and SPM. Only issued after reflection_signoff with decision approved or approved_with_corrections has been received and corrections applied. This is the primary SD output.",
+      "destination": "Written to sd_to_ppm.json and sd_to_spm_{subsystem}.json. Notifications sent to ppm_inbox.json and relevant spm inboxes.",
+      "type_specific_fields": {
+        "reflection_signoff_id": "string — message_id of the reflection_signoff that authorised this release. Mandatory. Empty string blocks release.",
+        "subsystem_id": "string — subsystem this spec covers",
+        "subsystem_name": "string — human readable",
+        "spec_version": "string — e.g. 1.0, 1.1",
+        "spec_document_path": "string — file path to the full specification document",
+        "interfaces_defined": "array of interface_summary_object",
+        "data_exchanges_defined": "array of data_exchange_summary_object",
+        "dependencies_on_subsystems": "array of strings — subsystem_ids this subsystem depends on",
+        "security_review_required": "boolean — whether Security must review this spec before implementation begins",
+        "design_decisions_log_path": "string — file path to the design decisions log for this subsystem"
+      },
+      "interface_summary_object": {
+        "interface_id": "string — e.g. IFC-VM-0001",
+        "name": "string",
+        "purpose": "string — one sentence",
+        "provider": "string — subsystem that implements this interface",
+        "consumers": "array of strings — subsystem_ids that use this interface",
+        "version": "string"
+      },
+      "data_exchange_summary_object": {
+        "exchange_id": "string — e.g. DXC-VM-0001",
+        "name": "string",
+        "format": "string — e.g. JSON, binary, Rust struct",
+        "direction": "string — enum: request_response | event | stream | one_way",
+        "producer": "string — subsystem_id",
+        "consumers": "array of strings — subsystem_ids"
+      }
+    },
+
+    "design_decision": {
+      "description": "SD records a significant design decision with full rationale. Written to SD's own decisions log and to the relevant spec document. Not an inbox message — a persistent record.",
+      "destination": "Written to sd_state.json decisions_log AND appended to the relevant subsystem design_decisions_log file.",
+      "type_specific_fields": {
+        "subsystem_id": "string",
+        "decision_subject": "string — one line description",
+        "context": "string — what situation required this decision",
+        "options_considered": "array of option_object",
+        "decision_made": "string — what was decided",
+        "rationale": "string — full explanation. Mandatory. Never empty.",
+        "consequences": "string — what this decision forecloses or enables",
+        "reversibility": "string — enum: reversible | costly_to_reverse | irreversible",
+        "decided_at": "string — ISO 8601"
+      },
+      "option_object": {
+        "option": "string — description of the option",
+        "pros": "array of strings",
+        "cons": "array of strings",
+        "rejected_because": "string — or empty string if this was the chosen option"
+      }
+    },
+
+    "spec_correction_request": {
+      "description": "Quality or Security sends this to SD when a problem is identified that originates in the spec rather than the implementation. SD receives it, assesses, and either updates the spec or pushes back with documented rationale. This is Fix 3 from Org Structure v2.0. PPM is always copied.",
+      "destination": "Written to {role}_to_sd.json outbox. Notification sent to sd_inbox.json. Separate notification sent to ppm_inbox.json.",
+      "type_specific_fields": {
+        "originating_role": "string — enum: qa | sec",
+        "spec_reference": "string — file path or spec_release message_id of the spec where the problem was found",
+        "interface_id": "string — specific interface ID where the problem was found, or empty string if spec-level",
+        "finding": "string — precise description of the problem. What is wrong, where it is, why it is a problem.",
+        "proposed_correction": "string — what the originating role believes the correction should be, or empty string if SD's judgement is required",
+        "severity": "string — enum: critical | high | normal",
+        "blocking_tasks": "array of strings — task IDs that cannot proceed until this is resolved"
+      }
+    },
+
+    "spec_correction_response": {
+      "description": "SD's response to a spec_correction_request. Either accepts and updates, or pushes back with documented rationale. Written within one reporting cycle of receiving the request.",
+      "destination": "Written to sd_to_{originating_role}.json outbox. Notification to originating role inbox and ppm_inbox.json.",
+      "type_specific_fields": {
+        "in_response_to": "string — message_id of the spec_correction_request",
+        "decision": "string — enum: accepted | rejected | partially_accepted",
+        "rationale": "string — full explanation. Mandatory. Never empty.",
+        "spec_updated": "boolean — true if the spec document was modified",
+        "updated_spec_version": "string — new spec version if updated, or empty string",
+        "updated_spec_path": "string — file path to updated spec if updated, or empty string",
+        "ppm_action_required": "boolean — whether PPM needs to notify affected SPMs of the change"
+      }
+    },
+
+    "interface_dispute": {
+      "description": "Two SPMs submit this jointly to SD when an interface conflict cannot be resolved directly. SD issues a binding_resolution in response. PPM is notified. PM is not involved unless the resolution itself is disputed. This is Fix 4 from Org Structure v2.0.",
+      "destination": "Written to {spm_a}_to_sd.json or {spm_b}_to_sd.json. Joint authorship recorded in the message. Notification to sd_inbox.json and ppm_inbox.json.",
+      "type_specific_fields": {
+        "spm_a_id": "string — spm identifier e.g. spm_vm_lifecycle",
+        "spm_b_id": "string — spm identifier e.g. spm_cow_engine",
+        "interface_id": "string — the interface contract in dispute",
+        "spec_reference": "string — file path or spec_release message_id of the relevant spec",
+        "spm_a_position": "string — what spm_a believes the interface contract requires",
+        "spm_b_position": "string — what spm_b believes the interface contract requires",
+        "conflict_description": "string — precise description of the conflict. What they disagree on.",
+        "attempted_resolutions": "array of strings — what both SPMs already tried before escalating",
+        "blocking_tasks": "array of strings — task IDs blocked pending resolution"
+      }
+    },
+
+    "binding_resolution": {
+      "description": "SD's authoritative resolution of an interface_dispute between two SPMs. Both SPMs receive this. PPM is notified. The resolution is binding — neither SPM may deviate from it without a new spec_correction_request.",
+      "destination": "Written to sd_to_{spm_a}.json and sd_to_{spm_b}.json. Notifications to both SPM inboxes and ppm_inbox.json.",
+      "type_specific_fields": {
+        "in_response_to": "string — message_id of the interface_dispute",
+        "interface_id": "string — the interface contract being resolved",
+        "resolution": "string — the definitive statement of what the interface contract requires. This is the new truth.",
+        "rationale": "string — full explanation referencing the original spec. Mandatory. Never empty.",
+        "spec_update_required": "boolean — whether the spec document must be updated to reflect this resolution",
+        "updated_spec_version": "string — new spec version if updated, or empty string",
+        "updated_spec_path": "string — file path to updated spec, or empty string",
+        "effective_immediately": "boolean — always true. Binding resolutions take effect on receipt.",
+        "affected_tasks": "array of strings — task IDs that must be updated to reflect this resolution"
+      }
+    }
+  }
+}
