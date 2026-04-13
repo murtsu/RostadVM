@@ -1,0 +1,116 @@
+{
+  "schema_version": "1.0",
+  "state_owner": "spm_{subsystem}",
+  "subsystem_id": "{subsystem} — e.g. vm_lifecycle",
+  "subsystem_name": "{human readable name}",
+  "last_updated": "ISO 8601",
+
+  "note": "This is the template. For each active SPM, create spm_{subsystem}_state.json by copying and filling in the subsystem-specific values. Remove all schema-documentation objects from arrays before use — arrays must be empty at initialisation.",
+
+  "operational_status": {
+    "overall_status": "green",
+    "active_coder_count": 0,
+    "coder_queue_depth": 0.0,
+    "tasks_assigned": 0,
+    "tasks_in_progress": 0,
+    "tasks_in_review": 0,
+    "tasks_qa_pending": 0,
+    "tasks_done": 0,
+    "tasks_blocked": 0
+  },
+
+  "spec": {
+    "spec_release_id": "",
+    "spec_version": "",
+    "spec_path": "",
+    "interfaces_to_implement": [],
+    "security_review_required": false
+  },
+
+  "coder_registry_schema": {
+    "note": "Schema for objects in coder_registry array. Not a real entry.",
+    "coder_id": "string — e.g. coder_vm_01",
+    "active": "boolean — true if this coder is currently assigned work",
+    "current_task_id": "string — TSK message_id of current task or empty string",
+    "inbox_path": "string — .agents/inbox/{coder_id}_inbox.json",
+    "outbox_path": "string — .agents/outbox/spm_{subsystem}_to_{coder_id}.json"
+  },
+  "coder_registry": [],
+
+  "task_backlog_schema": {
+    "note": "Schema for objects in task_backlog array. Not a real entry.",
+    "task_id": "string — TSK message_id from PPM",
+    "title": "string",
+    "status": "string — enum: waiting_deps | waiting_tools | ready",
+    "dependencies": "array of strings — task_ids that must be done first",
+    "tool_awaited": "string — tool name being waited for, or empty string if none",
+    "ppm_assignment_id": "string — TAS message_id of the PPM task_assignment"
+  },
+  "task_backlog": [],
+
+  "active_task_schema": {
+    "note": "Schema for objects in active_tasks array. Not a real entry.",
+    "task_id": "string — TSK message_id",
+    "title": "string",
+    "coder_id": "string — which coder is assigned",
+    "cag_message_id": "string — CAG message_id of the coder_assignment sent",
+    "status": "string — enum: in_progress | in_review | qa_pending | blocked",
+    "pre_block_status": "string — status before entering blocked, or empty string",
+    "blocked_since": "string — ISO 8601 or empty string",
+    "blocked_reason": "string — or empty string",
+    "cr_sign_off_id": "string — RRS message_id with decision approved, or empty string",
+    "qa_sign_off_id": "string — QA approval message_id or empty string",
+    "doc_sign_off_id": "string — Documenter confirmation message_id or empty string",
+    "code_package_id": "string — CPK message_id of latest code delivery",
+    "review_request_id": "string — RRQ message_id of active review request",
+    "status_history": [
+      {
+        "from_status": "string",
+        "to_status": "string",
+        "timestamp": "string — ISO 8601",
+        "reason": "string"
+      }
+    ]
+  },
+  "active_tasks": [],
+
+  "completed_tasks": [],
+
+  "active_blocker_schema": {
+    "note": "Schema for objects in active_blockers array. Not a real entry.",
+    "task_id": "string",
+    "blocked_since": "string — ISO 8601",
+    "reason": "string",
+    "pre_block_status": "string",
+    "cycles_blocked": "integer",
+    "requires_escalation": "boolean"
+  },
+  "active_blockers": [],
+
+  "open_review_requests": [],
+
+  "open_disputes": [],
+
+  "tool_registry_schema": {
+    "note": "Schema for objects in tool_registry array. Not a real entry.",
+    "tool_name": "string",
+    "available": "boolean",
+    "provided_by": "string — enum: tm | mtm",
+    "version": "string or empty string",
+    "description": "string — one sentence"
+  },
+  "tool_registry": [],
+
+  "sequence_counters": {
+    "CAG": 0,
+    "TRQ": 0,
+    "RRQ": 0,
+    "TCM": 0,
+    "SRP": 0,
+    "IDP": 0,
+    "ESC": 0,
+    "NTF": 0
+  },
+
+  "decisions_log": []
+}
