@@ -157,6 +157,25 @@ Format: `{TYPE}-{ROLE}-{SEQUENCE}`
 | spec_correction_request | SCR |
 | interface_dispute | IDP |
 | binding_resolution | BRS |
+| task_assignment | TAS |
+| status_report | SRP |
+| task_completion | TCM |
+| coder_scale_decision | CSD |
+| status_report_request | SRQ |
+| dependency_conflict | DCF |
+| design_reflection | DRF |
+| spec_release | SPR |
+| design_decision | DDC |
+| reflection_signoff | RSO |  # sent by PM on Marko behalf
+| coder_assignment | CAG |
+| tool_request | TRQ |
+| tool_delivery | TDL |
+| coverage_notice | CVN |
+| tool_update | TUP |
+| review_request | RRQ |
+| review_result | RRS |
+| code_package | CPK |
+| spec_correction_response | SRR |
 
 Examples: `REQ-CLIENT-0001`, `ESC-SPM-0003`, `DEC-PM-0007`
 
@@ -217,4 +236,4 @@ All other agents are spawned by PM or PPM as subagents when needed.
 
 ---
 
-*This constitution is version 1.1. Changes require PM escalation to Marko and a new version number.*
+*This constitution is version 1.7. Changes require PM escalation to Marko and a new version number.*
