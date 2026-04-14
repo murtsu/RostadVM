@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "state_owner": "tm_{subsystem}",
+  "subsystem_id": "{subsystem} \u2014 e.g. vm_lifecycle",
+  "subsystem_name": "{human readable name}",
+  "last_updated": "ISO 8601",
+  "note": "This is the template. For each active TM create tm_{subsystem}_state.json by copying and filling in subsystem-specific values. Remove all _schema documentation objects before use \u2014 arrays must be empty at initialisation.",
+  "operational_status": {
+    "overall_status": "green",
+    "tools_built": 0,
+    "open_requests": 0,
+    "active_builds": []
+  },
+  "spm_id": "spm_{subsystem}",
+  "mtm_notified_tools": [],
+  "tool_registry_schema": {
+    "note": "Schema for objects in tool_registry. Not a real entry.",
+    "tool_name": "string",
+    "tool_path": "string \u2014 file path relative to repo root",
+    "version": "string \u2014 e.g. 1.0.0",
+    "status": "string \u2014 enum: building | delivered | deprecated",
+    "delivery_id": "string \u2014 TDL message_id of the delivery",
+    "cross_subsystem_candidate": "boolean",
+    "mtm_notified": "boolean \u2014 whether MTM was informed of this tool",
+    "doc_path": "string \u2014 path to documentation or empty string"
+  },
+  "tool_registry": [],
+  "open_request_schema": {
+    "note": "Schema for objects in open_requests. Not a real entry.",
+    "request_id": "string \u2014 TRQ message_id",
+    "tool_name": "string",
+    "priority": "string \u2014 enum: critical | high | normal",
+    "received_at": "string \u2014 ISO 8601",
+    "blocking_tasks": "array of strings \u2014 task_ids blocked until delivered",
+    "cross_subsystem_candidate": "boolean",
+    "build_status": "string \u2014 enum: queued | in_progress | done"
+  },
+  "open_requests": [],
+  "sequence_counters": {
+    "TDL": 0,
+    "SRP": 0,
+    "NTF": 0,
+    "ESC": 0
+  },
+  "decisions_log": [],
+  "coverage": {
+    "active": false,
+    "coverage_start": "",
+    "reason": ""
+  }
+}
