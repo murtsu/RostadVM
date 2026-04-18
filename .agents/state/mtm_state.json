@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "state_owner": "mtm",
+  "last_updated": "ISO 8601",
+  "note": "MTM is project-wide, not subsystem-scoped. One instance per project. mtm_state.json is readable by all TMs so they can check for existing shared tools before building locally.",
+  "operational_status": {
+    "overall_status": "green",
+    "shared_tools_total": 0,
+    "open_absorption_candidates": 0,
+    "active_coverage_count": 0,
+    "open_requests": 0
+  },
+  "shared_tool_registry": [],
+  "shared_tool_schema": {
+    "note": "Schema for objects in shared_tool_registry. Not a real entry.",
+    "tool_name": "string",
+    "tool_path": "string \u2014 e.g. tools/shared/{tool_name}/",
+    "version": "string",
+    "status": "string \u2014 enum: active | deprecated",
+    "description": "string \u2014 one sentence",
+    "absorbed_from": "string \u2014 tm_id or empty string if built by MTM directly",
+    "stn_message_id": "string \u2014 STN message_id of the shared_tool_notice",
+    "intended_consumers": "array of strings \u2014 role identifiers",
+    "doc_path": "string or empty string"
+  },
+  "review_toolset": [],
+  "review_toolset_schema": {
+    "note": "Schema for Code Reviewer tools. Not a real entry.",
+    "tool_name": "string",
+    "tool_path": "string",
+    "version": "string",
+    "purpose": "string \u2014 what review problem this tool solves",
+    "delivery_id": "string \u2014 TDL message_id"
+  },
+  "test_toolset": [],
+  "test_toolset_schema": {
+    "note": "Schema for Tester tools. Not a real entry.",
+    "tool_name": "string",
+    "tool_path": "string",
+    "version": "string",
+    "purpose": "string",
+    "delivery_id": "string \u2014 TDL message_id"
+  },
+  "absorption_candidates": [],
+  "absorption_candidate_schema": {
+    "note": "Schema for cross-subsystem tool candidates awaiting absorption decision. Not a real entry.",
+    "tool_name": "string",
+    "source_tm": "string \u2014 tm_id that flagged this",
+    "tool_path": "string \u2014 current local path",
+    "version": "string",
+    "description": "string",
+    "flagged_at": "string \u2014 ISO 8601",
+    "decision": "string \u2014 enum: pending | absorb | leave_local",
+    "decision_rationale": "string or empty string"
+  },
+  "active_coverage": [],
+  "active_coverage_schema": {
+    "note": "Schema for active coverage sessions. Not a real entry.",
+    "target_tm": "string \u2014 tm_id being covered",
+    "coverage_start": "string \u2014 ISO 8601",
+    "reason": "string",
+    "tools_built_during_coverage": "array of tool_summary_object with fields: tool_name, tool_path, version, delivery_id (TDL message_id)"
+  },
+  "tm_registry": [],
+  "tm_registry_schema": {
+    "note": "Schema for known TMs. Not a real entry. Populated as TMs come online.",
+    "tm_id": "string \u2014 e.g. tm_vm_lifecycle",
+    "subsystem_id": "string",
+    "inbox_path": "string \u2014 .agents/inbox/tm_{subsystem}_inbox.json",
+    "status": "string \u2014 enum: active | under_coverage | unavailable",
+    "outbox_path": "string \u2014 .agents/outbox/mtm_to_tm_{subsystem}.json"
+  },
+  "sequence_counters": {
+    "STN": 0,
+    "DPN": 0,
+    "CVN": 0,
+    "TDL": 0,
+    "SRP": 0,
+    "NTF": 0,
+    "ESC": 0
+  },
+  "decisions_log": [],
+  "open_requests_list": [],
+  "open_request_schema": {
+    "note": "Schema for tracked tool requests during coverage or direct build. Not a real entry.",
+    "request_id": "string \u2014 TRQ or ESC message_id",
+    "tool_name": "string",
+    "requested_by": "string \u2014 role identifier",
+    "context": "string \u2014 enum: coverage | review_toolset | test_toolset",
+    "priority": "string \u2014 enum: critical | high | normal",
+    "received_at": "string \u2014 ISO 8601",
+    "build_status": "string \u2014 enum: queued | in_progress | done"
+  }
+}
