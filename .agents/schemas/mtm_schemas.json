@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0",
+  "description": "JSON schemas for MTM (Master Tool Maker) message types. MTM is project-wide, not subsystem-scoped. Identity: mtm. One instance per project.",
+  "common_fields": {
+    "note": "Every inbox message includes these fields",
+    "schema_version": "string \u2014 always 1.0",
+    "message_type": "string \u2014 see type list in CLAUDE.md",
+    "timestamp": "string \u2014 ISO 8601",
+    "from_role": "string \u2014 sender identifier",
+    "to_role": "string \u2014 recipient identifier",
+    "message_id": "string \u2014 unique ID following CLAUDE.md convention",
+    "status": "string \u2014 enum: unread | pending | done"
+  },
+  "schemas": {
+    "shared_tool_notice": {
+      "description": "MTM notifies all relevant TMs, SPMs, Code Reviewers, and Testers that a new shared tool is available in the shared layer. Replaces any subsystem-local tool that served the same purpose. Type code: STN.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "tool_name": "string \u2014 name of the shared tool",
+        "tool_path": "string \u2014 file path in shared tools directory e.g. tools/shared/{tool_name}/",
+        "tool_version": "string \u2014 e.g. 1.0.0",
+        "description": "string \u2014 what the tool does",
+        "usage": "string \u2014 how to invoke it. Complete enough that any coder can use it without asking.",
+        "inputs": "string",
+        "outputs": "string",
+        "test_coverage": "string \u2014 how the tool was tested",
+        "doc_path": "string \u2014 path to full documentation or empty string if inline",
+        "absorbed_from": "string \u2014 tm_id of the subsystem TM whose local tool this was absorbed from, or empty string if built fresh by MTM",
+        "supersedes_local_tools": "array of strings \u2014 tm_ids whose local tools are now redundant and should be deprecated in favour of this shared tool",
+        "intended_consumers": "array of strings \u2014 role identifiers that should use this tool e.g. spm_vm_lifecycle, cr, test"
+      }
+    },
+    "deprecation_notice": {
+      "description": "MTM notifies relevant roles that a shared tool is being retired. Includes migration path. Type code: DPN.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "tool_name": "string \u2014 name of the tool being deprecated",
+        "tool_version": "string \u2014 version being deprecated",
+        "deprecation_date": "string \u2014 ISO 8601 date after which the tool will be removed",
+        "reason": "string \u2014 why it is being deprecated",
+        "replacement_tool": "string \u2014 name of the tool that replaces it, or empty string if no replacement",
+        "replacement_path": "string \u2014 path to replacement tool, or empty string",
+        "migration_notes": "string \u2014 how to migrate from deprecated to replacement",
+        "breaking_changes": "boolean \u2014 true if consumers must update usage before deprecation_date",
+        "affected_roles": "array of strings \u2014 role identifiers that use this tool and must migrate"
+      }
+    },
+    "coverage_notice": {
+      "description": "MTM sends this to a subsystem TM when entering or exiting coverage mode. Type code: CVN.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "target_tm": "string \u2014 tm_id being covered e.g. tm_vm_lifecycle",
+        "active": "boolean \u2014 true when coverage is starting, false when ending",
+        "coverage_start": "string \u2014 ISO 8601 or empty string if active is false",
+        "reason": "string \u2014 why coverage is needed",
+        "tools_delivered_during_coverage": "array of tool_summary_object \u2014 populated when active is false. MTM builds this from its active_coverage entry.",
+        "resume_instructions": "string \u2014 notes for TM on resuming, or empty string"
+      },
+      "tool_summary_object": {
+        "tool_name": "string",
+        "tool_path": "string",
+        "version": "string",
+        "delivery_id": "string \u2014 TDL message_id"
+      }
+    },
+    "tool_delivery": {
+      "description": "MTM delivers a tool \u2014 either a new shared tool or a coverage delivery for a blocked TM. Uses same type code TDL as subsystem TM deliveries. Recipient is SPM or CR or TEST depending on context.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "in_response_to": "string \u2014 TRQ message_id of the request, or empty string if proactive build",
+        "delivery_context": "string \u2014 enum: shared_layer | coverage | review_toolset | test_toolset",
+        "tool_name": "string",
+        "tool_path": "string",
+        "tool_version": "string",
+        "description": "string",
+        "usage": "string",
+        "inputs": "string",
+        "outputs": "string",
+        "test_coverage": "string",
+        "doc_path": "string or empty string",
+        "unblocks_tasks": "array of strings \u2014 task_ids unblocked by this delivery",
+        "target_spm": "string \u2014 spm_id to deliver to during coverage e.g. spm_vm_lifecycle. Empty string for shared_layer, review_toolset, test_toolset delivery contexts."
+      }
+    },
+    "status_report": {
+      "description": "MTM sends daily status to PPM. Type code: SRP.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "report_date": "string \u2014 ISO 8601 date",
+        "overall_status": "string \u2014 enum: green | amber | red",
+        "summary": "string \u2014 one to two sentences",
+        "shared_tools_total": "integer \u2014 tools in shared registry",
+        "shared_tools_added_this_cycle": "array of strings \u2014 tool names added",
+        "coverage_active": "array of strings \u2014 tm_ids currently under coverage",
+        "open_absorption_candidates": "integer \u2014 cross-subsystem candidates awaiting absorption decision",
+        "open_requests": "integer \u2014 tool requests not yet fulfilled",
+        "issues": "array of strings"
+      }
+    },
+    "deprecation_supersede_notice": {
+      "description": "MTM notifies the source TM that their local tool has been absorbed into the shared layer and their local copy should be deprecated. Written to mtm_to_tm_{subsystem}.json. Type code: STN \u2014 same as shared_tool_notice, identified by context.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "tool_name": "string \u2014 the local tool being superseded",
+        "shared_tool_name": "string \u2014 name of the shared tool that replaces it",
+        "shared_tool_path": "string \u2014 path to the shared tool",
+        "shared_tool_version": "string",
+        "stn_message_id": "string \u2014 STN message_id of the shared_tool_notice sent to consumers",
+        "action_required": "string \u2014 always: Deprecate local tool. Update tool_registry entry status to deprecated. Inform coders to use shared tool path instead."
+      }
+    }
+  }
+}
