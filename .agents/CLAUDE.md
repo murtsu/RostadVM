@@ -172,6 +172,8 @@ Format: `{TYPE}-{ROLE}-{SEQUENCE}`
 | tool_delivery | TDL |
 | coverage_notice | CVN |
 | tool_update | TUP |
+| shared_tool_notice | STN |
+| deprecation_notice | DPN |
 | review_request | RRQ |
 | review_result | RRS |
 | code_package | CPK |
@@ -236,4 +238,4 @@ All other agents are spawned by PM or PPM as subagents when needed.
 
 ---
 
-*This constitution is version 1.7. Changes require PM escalation to Marko and a new version number.*
+*This constitution is version 1.8. Changes require PM escalation to Marko and a new version number.*
