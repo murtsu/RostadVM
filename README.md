@@ -5,7 +5,7 @@
 If you have views, share them.
 Every serious opinion will be considered.
 That is not a courtesy line. It is how good software gets built.
-Update: For those really interested theres a cookbook up explaining how to use this.
+Update: For those really interested there's a cookbook up explaining how to use this.
 ---
 
 ## What this is
