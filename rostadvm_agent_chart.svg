@@ -1,0 +1,404 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200">
+  <defs>
+    <!-- Paper texture filter for hand-drawn feel -->
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="3"/>
+      <feDisplacementMap in="SourceGraphic" scale="1.8"/>
+    </filter>
+    <filter id="rougher" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.4"/>
+    </filter>
+    <filter id="paperTexture" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.9  0 0 0 0 0.87  0 0 0 0 0.75  0 0 0 0.08 0"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- Marker for arrows -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2c2c2a"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1b3a6b"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c4452d"/>
+    </marker>
+  </defs>
+
+  <!-- Paper-like background -->
+  <rect width="1600" height="1200" fill="#fbf8f0"/>
+  <rect width="1600" height="1200" fill="url(#paperTexturePattern)" opacity="0.4"/>
+  
+  <!-- Pattern for paper grid -->
+  <pattern id="graph" width="30" height="30" patternUnits="userSpaceOnUse">
+    <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#d9d4c2" stroke-width="0.5" opacity="0.3"/>
+  </pattern>
+  <rect width="1600" height="1200" fill="url(#graph)"/>
+
+  <!-- Title block -->
+  <g filter="url(#rougher)">
+    <rect x="60" y="40" width="1480" height="100" fill="#fff9e8" stroke="#2c2c2a" stroke-width="3" rx="6"/>
+  </g>
+  <text x="90" y="95" font-family="Comic Sans MS, Marker Felt, cursive" font-size="44" font-weight="bold" fill="#1b3a6b">
+    RostadVM — Agent Organisation
+  </text>
+  <text x="90" y="125" font-family="Comic Sans MS, Marker Felt, cursive" font-size="20" fill="#5a5851" font-style="italic">
+    How 15 AI agents build software. 7 built so far. 75 bugs caught before runtime.
+  </text>
+  
+  <!-- Duck in top right -->
+  <g transform="translate(1380, 55)">
+    <ellipse cx="50" cy="55" rx="48" ry="32" fill="#f5d142" stroke="#2c2c2a" stroke-width="2.5" filter="url(#rough)"/>
+    <ellipse cx="75" cy="38" rx="22" ry="18" fill="#f5d142" stroke="#2c2c2a" stroke-width="2.5" filter="url(#rough)"/>
+    <circle cx="82" cy="35" r="2.5" fill="#2c2c2a"/>
+    <!-- Sunglasses -->
+    <rect x="68" y="32" width="10" height="6" fill="#2c2c2a" rx="1"/>
+    <rect x="81" y="32" width="10" height="6" fill="#2c2c2a" rx="1"/>
+    <path d="M 78 35 L 81 35" stroke="#2c2c2a" stroke-width="1.5"/>
+    <!-- Beak -->
+    <path d="M 95 38 L 108 42 L 95 46 z" fill="#e89a1a" stroke="#2c2c2a" stroke-width="2"/>
+    <text x="50" y="108" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851" font-style="italic">the duck approves</text>
+  </g>
+
+  <!-- ===== LEGEND ===== -->
+  <g transform="translate(90, 170)">
+    <text font-family="Comic Sans MS, cursive" font-size="16" font-weight="bold" fill="#2c2c2a">LEGEND:</text>
+    
+    <g transform="translate(0, 20)">
+      <rect x="0" y="0" width="30" height="22" fill="#d4e9f7" stroke="#1b3a6b" stroke-width="2" filter="url(#rough)"/>
+      <text x="40" y="16" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">built ✓</text>
+    </g>
+    
+    <g transform="translate(130, 20)">
+      <rect x="0" y="0" width="30" height="22" fill="#f4f2ec" stroke="#888780" stroke-width="2" stroke-dasharray="4,3" filter="url(#rough)"/>
+      <text x="40" y="16" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">pending</text>
+    </g>
+    
+    <g transform="translate(260, 20)">
+      <path d="M 0 11 L 30 11" stroke="#1b3a6b" stroke-width="2" marker-end="url(#arrowBlue)"/>
+      <text x="40" y="16" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">sends messages to</text>
+    </g>
+    
+    <g transform="translate(500, 20)">
+      <path d="M 0 11 L 30 11" stroke="#c4452d" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrowRed)"/>
+      <text x="40" y="16" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">escalates to</text>
+    </g>
+    
+    <g transform="translate(700, 20)">
+      <text x="0" y="16" font-size="22" fill="#c4452d">⚑</text>
+      <text x="20" y="16" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">checkpoint</text>
+    </g>
+    
+    <g transform="translate(850, 20)">
+      <text x="0" y="16" font-size="18">🛠</text>
+      <text x="24" y="16" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">builds tools</text>
+    </g>
+    
+    <g transform="translate(1000, 20)">
+      <text x="0" y="16" font-size="18">🔍</text>
+      <text x="24" y="16" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">reviews</text>
+    </g>
+  </g>
+
+  <!-- ===== EXTERNAL: MARKO ===== -->
+  <g transform="translate(700, 230)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="200" height="70" fill="#ffe8a1" stroke="#2c2c2a" stroke-width="3" rx="12"/>
+    </g>
+    <text x="100" y="30" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="22" font-weight="bold" fill="#2c2c2a">MARKO</text>
+    <text x="100" y="55" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="14" fill="#5a5851" font-style="italic">the human</text>
+  </g>
+
+  <!-- arrow Marko <-> PM -->
+  <g>
+    <path d="M 800 305 L 800 355" stroke="#1b3a6b" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <path d="M 815 355 L 815 305" stroke="#1b3a6b" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="830" y="335" font-family="Comic Sans MS, cursive" font-size="12" fill="#1b3a6b">REQ / CRP</text>
+  </g>
+
+  <!-- ===== LEVEL 1: PM ===== -->
+  <g transform="translate(700, 360)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="200" height="80" fill="#d4e9f7" stroke="#1b3a6b" stroke-width="3" rx="10"/>
+    </g>
+    <text x="100" y="30" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="20" font-weight="bold" fill="#1b3a6b">PM ✓</text>
+    <text x="100" y="50" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">Project Manager</text>
+    <text x="100" y="68" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851" font-style="italic">external face</text>
+  </g>
+
+  <!-- arrow PM <-> PPM -->
+  <g>
+    <path d="M 800 445 L 800 495" stroke="#1b3a6b" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <path d="M 815 495 L 815 445" stroke="#1b3a6b" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="830" y="475" font-family="Comic Sans MS, cursive" font-size="12" fill="#1b3a6b">PLN / RPT</text>
+  </g>
+
+  <!-- arrow PM <-> SD -->
+  <g>
+    <path d="M 700 400 Q 500 400 450 500" stroke="#1b3a6b" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="530" y="415" font-family="Comic Sans MS, cursive" font-size="12" fill="#1b3a6b">DRF ⚑ RSO</text>
+  </g>
+
+  <!-- ===== LEVEL 2: PPM, SD ===== -->
+  <g transform="translate(700, 500)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="200" height="80" fill="#d4e9f7" stroke="#1b3a6b" stroke-width="3" rx="10"/>
+    </g>
+    <text x="100" y="30" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="20" font-weight="bold" fill="#1b3a6b">PPM ✓</text>
+    <text x="100" y="50" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">Program PM</text>
+    <text x="100" y="68" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851" font-style="italic">internal hub</text>
+  </g>
+
+  <g transform="translate(350, 500)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="200" height="80" fill="#d4e9f7" stroke="#1b3a6b" stroke-width="3" rx="10"/>
+    </g>
+    <text x="100" y="30" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="20" font-weight="bold" fill="#1b3a6b">SD ✓ ⚑</text>
+    <text x="100" y="50" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">Software Designer</text>
+    <text x="100" y="68" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851" font-style="italic">3 checkpoints</text>
+  </g>
+
+  <!-- SD <-> PPM arrow -->
+  <g>
+    <path d="M 550 540 L 700 540" stroke="#1b3a6b" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="580" y="530" font-family="Comic Sans MS, cursive" font-size="12" fill="#1b3a6b">SPR (spec release)</text>
+  </g>
+
+  <!-- arrow PPM -> MTM (over the top) -->
+  <g>
+    <path d="M 900 540 Q 1100 540 1150 600" stroke="#c4452d" stroke-width="2" stroke-dasharray="5,3" fill="none" marker-end="url(#arrowRed)" filter="url(#rough)"/>
+    <text x="1000" y="530" font-family="Comic Sans MS, cursive" font-size="11" fill="#c4452d" font-style="italic">coverage req</text>
+  </g>
+
+  <!-- ===== LEVEL 3: MTM on the side ===== -->
+  <g transform="translate(1150, 620)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="240" height="95" fill="#ffe5cc" stroke="#8a4a0b" stroke-width="3" rx="12"/>
+    </g>
+    <text x="120" y="30" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="20" font-weight="bold" fill="#8a4a0b">MTM ✓ 🛠</text>
+    <text x="120" y="50" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">Master Tool Maker</text>
+    <text x="120" y="70" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851" font-style="italic">project-global</text>
+    <text x="120" y="88" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851" font-style="italic">prevents duplicate tools</text>
+  </g>
+
+  <!-- PPM -> three SPMs -->
+  <g>
+    <path d="M 800 585 L 250 670" stroke="#1b3a6b" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <path d="M 800 585 L 800 670" stroke="#1b3a6b" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <path d="M 820 585 L 1000 670" stroke="#1b3a6b" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="450" y="610" font-family="Comic Sans MS, cursive" font-size="13" fill="#1b3a6b">TAS (task assignment)</text>
+  </g>
+
+  <!-- ===== LEVEL 4: SPMs (subsystems) ===== -->
+  <!-- SPM 1 -->
+  <g transform="translate(120, 675)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="220" height="80" fill="#d4e9f7" stroke="#1b3a6b" stroke-width="3" rx="10"/>
+    </g>
+    <text x="110" y="30" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="18" font-weight="bold" fill="#1b3a6b">SPM ✓</text>
+    <text x="110" y="50" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="12" fill="#2c2c2a">vm_lifecycle</text>
+    <text x="110" y="68" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851" font-style="italic">3 sign-offs</text>
+  </g>
+
+  <!-- SPM 2 -->
+  <g transform="translate(690, 675)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="220" height="80" fill="#d4e9f7" stroke="#1b3a6b" stroke-width="3" rx="10"/>
+    </g>
+    <text x="110" y="30" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="18" font-weight="bold" fill="#1b3a6b">SPM ✓</text>
+    <text x="110" y="50" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="12" fill="#2c2c2a">storage</text>
+    <text x="110" y="68" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851" font-style="italic">3 sign-offs</text>
+  </g>
+
+  <!-- SPM 3 -->
+  <g transform="translate(920, 675)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="220" height="80" fill="#d4e9f7" stroke="#1b3a6b" stroke-width="3" rx="10"/>
+    </g>
+    <text x="110" y="30" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="18" font-weight="bold" fill="#1b3a6b">SPM ✓</text>
+    <text x="110" y="50" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="12" fill="#2c2c2a">networking</text>
+    <text x="110" y="68" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851" font-style="italic">3 sign-offs</text>
+  </g>
+
+  <!-- SPM tools arrows to TM -->
+  <g>
+    <path d="M 230 755 L 230 810" stroke="#1b3a6b" stroke-width="2" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="235" y="790" font-family="Comic Sans MS, cursive" font-size="11" fill="#1b3a6b">TRQ</text>
+  </g>
+  <g>
+    <path d="M 800 755 L 800 810" stroke="#1b3a6b" stroke-width="2" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="805" y="790" font-family="Comic Sans MS, cursive" font-size="11" fill="#1b3a6b">TRQ</text>
+  </g>
+  <g>
+    <path d="M 1030 755 L 1030 810" stroke="#1b3a6b" stroke-width="2" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="1035" y="790" font-family="Comic Sans MS, cursive" font-size="11" fill="#1b3a6b">TRQ</text>
+  </g>
+
+  <!-- SPM to coder arrows -->
+  <g>
+    <path d="M 180 755 L 100 830" stroke="#1b3a6b" stroke-width="2" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="115" y="800" font-family="Comic Sans MS, cursive" font-size="11" fill="#1b3a6b">CAG</text>
+  </g>
+  <g>
+    <path d="M 750 755 L 660 830" stroke="#1b3a6b" stroke-width="2" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="675" y="800" font-family="Comic Sans MS, cursive" font-size="11" fill="#1b3a6b">CAG</text>
+  </g>
+  <g>
+    <path d="M 980 755 L 890 900" stroke="#1b3a6b" stroke-width="2" fill="none" marker-end="url(#arrowBlue)" filter="url(#rough)"/>
+    <text x="930" y="820" font-family="Comic Sans MS, cursive" font-size="11" fill="#1b3a6b">CAG</text>
+  </g>
+
+  <!-- SPM to CR -->
+  <g>
+    <path d="M 1075 755 Q 1150 800 1230 850" stroke="#888780" stroke-width="1.5" stroke-dasharray="4,3" fill="none" filter="url(#rough)"/>
+    <text x="1150" y="790" font-family="Comic Sans MS, cursive" font-size="11" fill="#888780">RRQ</text>
+  </g>
+
+  <!-- MTM to SPMs (dotted) -->
+  <g>
+    <path d="M 1160 720 Q 900 745 1140 720" stroke="#8a4a0b" stroke-width="1.5" stroke-dasharray="4,3" fill="none" opacity="0.5" filter="url(#rough)"/>
+    <text x="1150" y="765" font-family="Comic Sans MS, cursive" font-size="10" fill="#8a4a0b" font-style="italic">STN (shared tools)</text>
+  </g>
+
+  <!-- ===== LEVEL 5: TMs (one per SPM) + coders ===== -->
+  <!-- TM 1 -->
+  <g transform="translate(140, 815)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="180" height="60" fill="#ffe5cc" stroke="#8a4a0b" stroke-width="2.5" rx="8"/>
+    </g>
+    <text x="90" y="28" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="16" font-weight="bold" fill="#8a4a0b">TM ✓ 🛠</text>
+    <text x="90" y="46" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851">vm_lifecycle tools</text>
+  </g>
+
+  <!-- TM 2 -->
+  <g transform="translate(710, 815)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="180" height="60" fill="#ffe5cc" stroke="#8a4a0b" stroke-width="2.5" rx="8"/>
+    </g>
+    <text x="90" y="28" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="16" font-weight="bold" fill="#8a4a0b">TM ✓ 🛠</text>
+    <text x="90" y="46" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851">storage tools</text>
+  </g>
+
+  <!-- TM 3 -->
+  <g transform="translate(940, 815)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="180" height="60" fill="#ffe5cc" stroke="#8a4a0b" stroke-width="2.5" rx="8"/>
+    </g>
+    <text x="90" y="28" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="16" font-weight="bold" fill="#8a4a0b">TM ✓ 🛠</text>
+    <text x="90" y="46" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="11" fill="#5a5851">networking tools</text>
+  </g>
+
+  <!-- Coders (circles) -->
+  <g transform="translate(50, 830)">
+    <circle cx="30" cy="30" r="26" fill="#e8f5d4" stroke="#4a7c28" stroke-width="2.5" filter="url(#rough)"/>
+    <text x="30" y="35" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="12" font-weight="bold" fill="#4a7c28">CDR 1 ✓</text>
+  </g>
+  <g transform="translate(620, 830)">
+    <circle cx="30" cy="30" r="26" fill="#e8f5d4" stroke="#4a7c28" stroke-width="2.5" filter="url(#rough)"/>
+    <text x="30" y="35" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="12" font-weight="bold" fill="#4a7c28">CDR 2 ✓</text>
+  </g>
+  <g transform="translate(850, 890)">
+    <circle cx="30" cy="30" r="26" fill="#e8f5d4" stroke="#4a7c28" stroke-width="2.5" filter="url(#rough)"/>
+    <text x="30" y="35" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="12" font-weight="bold" fill="#4a7c28">CDR 3 ✓</text>
+  </g>
+
+  <!-- ===== PENDING AGENTS (dashed boxes to the right) ===== -->
+  <g transform="translate(1400, 185)">
+    <text font-family="Comic Sans MS, cursive" font-size="14" font-weight="bold" fill="#888780">PENDING (8):</text>
+  </g>
+
+  <!-- Pending list -->
+  <g transform="translate(1390, 195)">
+    <!-- CR -->
+    <g transform="translate(0, 15)">
+      <rect x="0" y="0" width="145" height="34" fill="#faf7ee" stroke="#888780" stroke-width="2" stroke-dasharray="4,3" rx="6" filter="url(#rough)"/>
+      <text x="72" y="15" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" font-weight="bold" fill="#2c2c2a">CR 🔍</text>
+      <text x="72" y="28" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="9" fill="#5a5851">Code Reviewer (next)</text>
+    </g>
+    <g transform="translate(0, 55)">
+      <rect x="0" y="0" width="145" height="30" fill="#faf7ee" stroke="#888780" stroke-width="2" stroke-dasharray="4,3" rx="6" filter="url(#rough)"/>
+      <text x="72" y="19" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">SEC (security)</text>
+    </g>
+    <g transform="translate(0, 90)">
+      <rect x="0" y="0" width="145" height="30" fill="#faf7ee" stroke="#888780" stroke-width="2" stroke-dasharray="4,3" rx="6" filter="url(#rough)"/>
+      <text x="72" y="19" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">QA (quality)</text>
+    </g>
+    <g transform="translate(0, 125)">
+      <rect x="0" y="0" width="145" height="30" fill="#faf7ee" stroke="#888780" stroke-width="2" stroke-dasharray="4,3" rx="6" filter="url(#rough)"/>
+      <text x="72" y="19" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">TEST</text>
+    </g>
+    <g transform="translate(0, 160)">
+      <rect x="0" y="0" width="145" height="30" fill="#faf7ee" stroke="#888780" stroke-width="2" stroke-dasharray="4,3" rx="6" filter="url(#rough)"/>
+      <text x="72" y="19" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">DOC</text>
+    </g>
+    <g transform="translate(0, 195)">
+      <rect x="0" y="0" width="145" height="30" fill="#faf7ee" stroke="#888780" stroke-width="2" stroke-dasharray="4,3" rx="6" filter="url(#rough)"/>
+      <text x="72" y="19" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">INT (integration)</text>
+    </g>
+    <g transform="translate(0, 230)">
+      <rect x="0" y="0" width="145" height="30" fill="#faf7ee" stroke="#888780" stroke-width="2" stroke-dasharray="4,3" rx="6" filter="url(#rough)"/>
+      <text x="72" y="19" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">CMVC</text>
+    </g>
+    <g transform="translate(0, 265)">
+      <rect x="0" y="0" width="145" height="30" fill="#faf7ee" stroke="#888780" stroke-width="2" stroke-dasharray="4,3" rx="6" filter="url(#rough)"/>
+      <text x="72" y="19" text-anchor="middle" font-family="Comic Sans MS, cursive" font-size="13" fill="#2c2c2a">INFRA / UX</text>
+    </g>
+  </g>
+
+  <!-- ===== ESCALATION FLOW (red dashed on the left) ===== -->
+  <g>
+    <path d="M 230 755 Q 80 700 80 490 Q 80 440 120 400 Q 400 390 700 390" stroke="#c4452d" stroke-width="2" stroke-dasharray="5,3" fill="none" filter="url(#rough)"/>
+    <text x="90" y="550" font-family="Comic Sans MS, cursive" font-size="12" fill="#c4452d" font-style="italic">escalation path</text>
+    <text x="90" y="566" font-family="Comic Sans MS, cursive" font-size="12" fill="#c4452d" font-style="italic">(ESC → PPM → PM)</text>
+  </g>
+
+  <!-- ===== STATS BOX (bottom left) ===== -->
+  <g transform="translate(80, 960)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="520" height="180" fill="#e8f5d4" stroke="#4a7c28" stroke-width="3" rx="10"/>
+    </g>
+    <text x="30" y="35" font-family="Comic Sans MS, cursive" font-size="22" font-weight="bold" fill="#4a7c28">The scoreboard</text>
+    
+    <g transform="translate(30, 55)">
+      <text y="20" font-family="Comic Sans MS, cursive" font-size="16" fill="#2c2c2a">✓ Agents built:</text>
+      <text x="200" y="20" font-family="Comic Sans MS, cursive" font-size="16" font-weight="bold" fill="#4a7c28">7 of 15</text>
+      
+      <text y="45" font-family="Comic Sans MS, cursive" font-size="16" fill="#2c2c2a">✓ Bugs caught:</text>
+      <text x="200" y="45" font-family="Comic Sans MS, cursive" font-size="16" font-weight="bold" fill="#4a7c28">75 total</text>
+      
+      <text y="70" font-family="Comic Sans MS, cursive" font-size="16" fill="#2c2c2a">✓ Message types:</text>
+      <text x="200" y="70" font-family="Comic Sans MS, cursive" font-size="16" font-weight="bold" fill="#4a7c28">32</text>
+      
+      <text y="95" font-family="Comic Sans MS, cursive" font-size="16" fill="#2c2c2a">✓ CLAUDE.md version:</text>
+      <text x="200" y="95" font-family="Comic Sans MS, cursive" font-size="16" font-weight="bold" fill="#4a7c28">v1.8</text>
+      
+      <text y="120" font-family="Comic Sans MS, cursive" font-size="16" fill="#2c2c2a">✓ Humans on project:</text>
+      <text x="200" y="120" font-family="Comic Sans MS, cursive" font-size="16" font-weight="bold" fill="#4a7c28">1</text>
+    </g>
+  </g>
+
+  <!-- ===== INVARIANTS (bottom right) ===== -->
+  <g transform="translate(620, 960)">
+    <g filter="url(#rougher)">
+      <rect x="0" y="0" width="755" height="180" fill="#ffe5cc" stroke="#8a4a0b" stroke-width="3" rx="10"/>
+    </g>
+    <text x="30" y="35" font-family="Comic Sans MS, cursive" font-size="22" font-weight="bold" fill="#8a4a0b">Rules that never bend</text>
+    
+    <g transform="translate(30, 55)">
+      <text y="20" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">⚑ No spec leaves SD without Marko confirming his analysis (Checkpoint 1)</text>
+      <text y="45" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">✓ No task is done without 3 sign-offs (QA + CR + DOC)</text>
+      <text y="70" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">🔍 The coder and the reviewer are never the same agent</text>
+      <text y="95" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">🛠 Same tool never built twice across subsystems if MTM can absorb it</text>
+      <text y="120" font-family="Comic Sans MS, cursive" font-size="14" fill="#2c2c2a">⚠ Missing rationale = not a decision, just a guess</text>
+    </g>
+  </g>
+
+  <!-- ===== Footer signature ===== -->
+  <g transform="translate(80, 1160)">
+    <text font-family="Comic Sans MS, cursive" font-size="13" fill="#5a5851" font-style="italic">
+      RostadVM · github.com/murtsu/RostadVM · Apache 2.0 · one human + fifteen AI agents · the duck is watching
+    </text>
+  </g>
+
+</svg>
