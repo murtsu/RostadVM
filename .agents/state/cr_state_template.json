@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "state_owner": "cr_{subsystem}",
+  "subsystem_id": "{subsystem}",
+  "last_updated": "ISO 8601",
+  "note": "Template. A real CR state file is created per subsystem at instantiation, e.g. cr_vm_lifecycle_state.json. One CR per active subsystem.",
+
+  "operational_status": {
+    "overall_status": "green",
+    "open_reviews_count": 0,
+    "reviews_in_round_2_or_higher": 0,
+    "design_language_rejection_rate_percent_last_cycle": 0
+  },
+
+  "open_reviews": [],
+
+  "open_review_schema": {
+    "note": "Schema for objects in open_reviews. Not a real entry.",
+    "rrq_message_id": "string — RRQ message_id that triggered this review",
+    "task_id": "string",
+    "code_package_id": "string — CPK id",
+    "review_round": "integer — increments for each new RRQ on the same task_id",
+    "received_at": "string — ISO 8601",
+    "status": "string — enum: unread | in_progress | completed",
+    "prior_rounds": "array of prior_round_object — populated when review_round > 1"
+  },
+
+  "prior_round_object_schema": {
+    "note": "Schema for prior_rounds entries. Not a real entry.",
+    "round": "integer",
+    "rrs_message_id": "string — RRS from the prior round",
+    "decision": "string — approved | rejected",
+    "blocking_findings_ids": "array of strings — finding_ids from prior round for consistency checking"
+  },
+
+  "review_history": [],
+
+  "review_history_schema": {
+    "note": "Schema for completed review rounds. Not a real entry. Retention: keep EVERY round for any task_id whose most recent decision is 'rejected' (the task may resubmit as a new round, and consistency_check requires all prior rounds). For task_ids whose most recent decision is 'approved', retain only the final approving RRS and prune earlier rounds after 50 approved tasks have accumulated. The 'last 50 completed reviews' rule applies to the count of approved task_ids, not round count.",
+    "task_id": "string",
+    "coder_id": "string — from the CPK's from_role; used for coder_pattern_observations",
+    "rrs_message_id": "string",
+    "review_round": "integer",
+    "decision": "string — approved | rejected",
+    "design_language_compliant": "boolean",
+    "blocking_findings_count": "integer",
+    "finding_categories_this_round": "array of strings — categories that appeared as findings this round; used for coder pattern tracking",
+    "completed_at": "string — ISO 8601"
+  },
+
+  "coder_pattern_observations": [],
+
+  "coder_pattern_schema": {
+    "note": "Track recurring issues per coder to flag structural training gaps. Not a real entry. Retention rule: an observation is kept until the coder's last 20 reviews contain fewer than 2 instances of the same category, at which point the observation is removed. 'Last 20 reviews' is computed from review_history filtered by coder_id, descending by completed_at, capped at 20. Patterns are recomputed at the end of every session. Threshold for escalation: 5 or more instances in the window.",
+    "coder_id": "string — e.g. coder_vm_01",
+    "recurring_finding_category": "string — enum matches finding_object.category",
+    "occurrences_last_20_reviews": "integer",
+    "first_observed_at": "string — ISO 8601, set when the pattern first crossed the threshold",
+    "threshold_for_escalation": 5,
+    "already_escalated": "boolean — true once a structural_concern ESC has been sent; prevents re-escalation on same observation"
+  },
+
+  "design_language_spec_version": "1.1",
+
+  "design_language_spec_path": "./vm_design_language_spec_v1_1.pdf",
+
+  "sequence_counters": {
+    "RRS": 0,
+    "SRP": 0,
+    "ESC": 0,
+    "CVR": 0,
+    "TRQ": 0,
+    "NTF": 0
+  }
+}
