@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0",
+  "description": "JSON schemas for QA (Quality Assurance) messages. QA is project-global. Identity: qa. One instance per project. QA reviews completed code packages against the subsystem specification. QA does not review code style, design language compliance, or implementation quality — that is CR's domain. QA asks one question: does this code do what the spec says it should do? Decisions are binary: approved or rejected.",
+
+  "common_fields": {
+    "note": "Every inbox message includes these fields",
+    "schema_version": "string — always 1.0",
+    "message_type": "string",
+    "timestamp": "string — ISO 8601",
+    "from_role": "string",
+    "to_role": "string",
+    "message_id": "string — {TYPE}-QA-{SEQUENCE}",
+    "status": "string — enum: unread | pending | done"
+  },
+
+  "schemas": {
+
+    "qa_approval": {
+      "description": "QA returns a binary spec-compliance verdict to SPM. Type code: QAP. When approved, qa_signoff_id equals this message's message_id and SPM uses it as qa_sign_off_id in task_completion. When rejected, qa_signoff_id is empty string.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "in_response_to": "string — CPK message_id of the code package being reviewed. Not the NTF that triggered the session — the actual CPK that contains the code.",
+        "task_id": "string — task being reviewed",
+        "code_package_id": "string — CPK message_id",
+        "cr_signoff_id": "string — CR's approval message_id. QA verifies this is present and non-empty before proceeding. If empty, QA rejects immediately with reason: cr_signoff_missing.",
+        "spec_version": "string — version of subsystem spec QA reviewed against e.g. vm_lifecycle_v1.3",
+        "spec_path": "string — path to spec document used",
+        "decision": "string — enum: approved | rejected",
+        "spec_compliance_summary": "string — one to three sentences. What QA checked and what the verdict means.",
+        "findings": "array of qa_finding_object — empty if approved with no concerns. Non-empty for rejected, or for approved with non-blocking observations.",
+        "blocking_findings_count": "integer — must be 0 if decision is approved",
+        "qa_signoff_id": "string — equals message_id when approved, empty string when rejected"
+      },
+      "qa_finding_object": {
+        "finding_id": "string — format QF{NN}",
+        "blocking": "boolean",
+        "spec_section": "string — the spec section the finding relates to",
+        "expected_behaviour": "string — what the spec says should happen",
+        "observed_behaviour": "string — what the code actually does based on the code package and test results",
+        "description": "string — clear description of the discrepancy",
+        "suggested_resolution": "string — may be empty; QA does not prescribe implementation"
+      },
+      "note": "QA does not review code style, design language compliance, naming conventions, or implementation elegance. Those belong to CR. A finding that is not rooted in a specific spec section is not a valid QA finding."
+    },
+
+    "spec_correction_request": {
+      "description": "QA sends this to SD when a spec ambiguity or error is discovered during review that cannot be resolved by reading the spec more carefully. QA cannot approve or reject code when the spec itself is the problem. Type code: SCR.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "affected_spec": "string — spec document name and version",
+        "affected_section": "string — section of the spec that is ambiguous or incorrect",
+        "problem": "string — precise description of the ambiguity or error",
+        "severity": "string — enum: blocking | non_blocking. Blocking means QA cannot complete the review until resolved.",
+        "proposed_correction": "string — QA's suggested resolution, may be empty",
+        "blocks_tasks": "array of strings — task_ids whose QA review is suspended pending resolution",
+        "ppm_notified": "boolean — always true; QA always notifies PPM when sending SCR"
+      }
+    },
+
+    "status_report": {
+      "description": "QA reports its state to PPM each cycle. Type code: SRP.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "report_date": "string — ISO 8601 date",
+        "overall_status": "string — enum: green | amber | red",
+        "summary": "string — one to two sentences",
+        "reviews_completed_this_cycle": "integer",
+        "reviews_approved": "integer",
+        "reviews_rejected": "integer",
+        "open_reviews": "integer",
+        "oldest_open_review_age_cycles": "integer",
+        "spec_correction_requests_sent": "integer — derived: count of SCRs in spec_correction_requests array sent this cycle (completed_at within current cycle date)",
+        "spec_correction_requests_pending": "integer — derived: count of spec_correction_requests entries with status: pending. Do not manually track — compute from the array each cycle.",
+        "rejection_patterns": "array of strings — any recurring spec sections generating repeated rejections. Signals spec clarity issues.",
+        "issues": "array of strings"
+      }
+    },
+
+    "escalation": {
+      "description": "QA escalates to PPM or PM when review cannot proceed. Type code: ESC.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "category": "string — enum: spec_missing | spec_ambiguous | code_package_unreadable | structural_concern",
+        "severity": "string — enum: low | medium | high | critical",
+        "subject": "string",
+        "rationale": "string",
+        "affected_tasks": "array of strings",
+        "proposed_resolution": "string",
+        "requires_decision_by": "string — ISO 8601"
+      }
+    },
+
+    "convention_request": {
+      "description": "QA asks for a ruling on an uncovered situation. Type code: CVR.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "situation": "string",
+        "proposed_convention": "string",
+        "impact_if_delayed": "string",
+        "requires_response_by": "string — ISO 8601"
+      }
+    },
+
+    "notification": {
+      "description": "Standard notification. Type code: NTF.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "points_to_outbox": "string",
+        "points_to_message_id": "string",
+        "summary": "string"
+      }
+    }
+  }
+}
