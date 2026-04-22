@@ -164,7 +164,7 @@ It will explain why things are designed the way they are.
 
 ---
 
-# Contract Coding, Part 1. Explained with a wedding thats not fat greek or from hell. 
+# Contract Coding, Part 1. Explained with a wedding thats not fat, greek or from hell. 
 The dinner party metaphor I used last week was almost right. 
 The problem with dinner parties is that when they go wrong, you can try again next Saturday. 
 A wedding is better. 
