@@ -3,136 +3,138 @@
   "description": "JSON schemas for all SPM input and output message types. SPMs are subsystem-scoped. Their IDs follow the pattern spm_{subsystem} e.g. spm_vm_lifecycle.",
   "common_fields": {
     "note": "Every inbox message includes these fields",
-    "schema_version": "string \u2014 always 1.0",
-    "message_type": "string \u2014 see type list in CLAUDE.md",
-    "timestamp": "string \u2014 ISO 8601",
-    "from_role": "string \u2014 role abbreviation of sender",
-    "to_role": "string \u2014 role identifier of recipient e.g. spm_vm_lifecycle",
-    "message_id": "string \u2014 unique ID following CLAUDE.md convention",
-    "status": "string \u2014 enum: unread | pending | done"
+    "schema_version": "string — always 1.0",
+    "message_type": "string — see type list in CLAUDE.md",
+    "timestamp": "string — ISO 8601",
+    "from_role": "string — role abbreviation of sender",
+    "to_role": "string — role identifier of recipient e.g. spm_vm_lifecycle",
+    "message_id": "string — unique ID following CLAUDE.md convention",
+    "status": "string — enum: unread | pending | done"
   },
   "schemas": {
     "coder_assignment": {
-      "description": "SPM assigns a specific implementation task to a coder subagent. Written to spm_{subsystem}_to_{coder_id}.json \u2014 one file per coder, never shared. Type code: CAG.",
+      "description": "SPM assigns a specific implementation task to a coder subagent. Written to spm_{subsystem}_to_{coder_id}.json — one file per coder, never shared. Type code: CAG.",
       "uses_common_fields": true,
       "type_specific_fields": {
-        "task_id": "string \u2014 TSK message_id from PPM's task_assignment",
-        "coder_id": "string \u2014 identifier for this coder instance e.g. coder_vm_01",
-        "title": "string \u2014 task title from PPM assignment",
-        "implementation_instructions": "string \u2014 technically precise instructions specific to this coder's scope within the task. Not a copy of the PPM task description \u2014 an SPM-level technical elaboration.",
-        "subsystem_context": "string \u2014 relevant context about this subsystem the coder needs to know",
-        "interface_specs_to_implement": "array of strings \u2014 file paths to relevant spec documents from SD",
-        "acceptance_criteria": "array of strings \u2014 copied from PPM task_assignment plus any SPM-level additions",
-        "design_language_ref": "string \u2014 path to design language spec. Always: ./vm_design_language_spec_v1_1.pdf",
-        "tools_available": "array of strings \u2014 tool names available from the Subsystem Tool Maker",
-        "dependencies": "array of strings \u2014 task_ids that must be complete before starting",
-        "deadline": "string \u2014 ISO 8601 date or empty string",
-        "supersedes": "string \u2014 CAG message_id of a previous assignment this replaces (e.g. after a binding_resolution updates the interface contract). Empty string for initial assignment."
+        "task_id": "string — TSK message_id from PPM's task_assignment",
+        "coder_id": "string — identifier for this coder instance e.g. coder_vm_01",
+        "title": "string — task title from PPM assignment",
+        "implementation_instructions": "string — technically precise instructions specific to this coder's scope within the task. Not a copy of the PPM task description — an SPM-level technical elaboration.",
+        "subsystem_context": "string — relevant context about this subsystem the coder needs to know",
+        "interface_specs_to_implement": "array of strings — file paths to relevant spec documents from SD",
+        "acceptance_criteria": "array of strings — copied from PPM task_assignment plus any SPM-level additions",
+        "design_language_ref": "string — path to design language spec. Always: ./vm_design_language_spec_v1_1.pdf",
+        "tools_available": "array of strings — tool names available from the Subsystem Tool Maker",
+        "dependencies": "array of strings — task_ids that must be complete before starting",
+        "deadline": "string — ISO 8601 date or empty string",
+        "supersedes": "string — CAG message_id of a previous assignment this replaces (e.g. after a binding_resolution updates the interface contract). Empty string for initial assignment."
       }
     },
     "tool_request": {
       "description": "SPM requests a tool to be built by the Subsystem Tool Maker. Written to spm_{subsystem}_to_tm_{subsystem}.json. Type code: TRQ.",
       "uses_common_fields": true,
       "type_specific_fields": {
-        "tool_name": "string \u2014 proposed name for the tool",
-        "purpose": "string \u2014 what this tool does and why it is needed",
-        "use_cases": "array of strings \u2014 specific situations where coders will use this tool",
-        "inputs": "string \u2014 what the tool accepts",
-        "outputs": "string \u2014 what the tool produces",
-        "priority": "string \u2014 enum: critical | high | normal",
-        "blocking_tasks": "array of strings \u2014 task_ids blocked until this tool exists",
-        "cross_subsystem_candidate": "boolean \u2014 true if this tool might be useful to other subsystems. If true, SPM notifies MTM."
+        "tool_name": "string — proposed name for the tool",
+        "purpose": "string — what this tool does and why it is needed",
+        "use_cases": "array of strings — specific situations where coders will use this tool",
+        "inputs": "string — what the tool accepts",
+        "outputs": "string — what the tool produces",
+        "priority": "string — enum: critical | high | normal",
+        "blocking_tasks": "array of strings — task_ids blocked until this tool exists",
+        "cross_subsystem_candidate": "boolean — true if this tool might be useful to other subsystems. If true, SPM notifies MTM."
       }
     },
     "review_request": {
       "description": "SPM submits completed code to the Code Reviewer. Written to spm_{subsystem}_to_cr.json. Type code: RRQ.",
       "uses_common_fields": true,
       "type_specific_fields": {
-        "task_id": "string \u2014 TSK message_id of the task being reviewed",
-        "coder_id": "string \u2014 which coder produced this code",
-        "code_package_id": "string \u2014 CPK message_id of the code_package being submitted",
-        "spec_reference": "string \u2014 SPR message_id or file path of the spec this code implements",
-        "self_review_notes": "string \u2014 SPM's own assessment of the code before formal review. Known issues, concerns, or things the reviewer should check carefully.",
-        "acceptance_criteria": "array of strings \u2014 from the original task_assignment"
+        "task_id": "string — TSK message_id of the task being reviewed",
+        "coder_id": "string — which coder produced this code",
+        "code_package_id": "string — CPK message_id of the code_package being submitted",
+        "spec_reference": "string — SPR message_id or file path of the spec this code implements",
+        "self_review_notes": "string — SPM's own assessment of the code before formal review. Known issues, concerns, or things the reviewer should check carefully.",
+        "acceptance_criteria": "array of strings — from the original task_assignment"
       }
     },
     "code_package": {
       "description": "A coder delivers completed code to the SPM. Written to coder_to_spm_{subsystem}.json. Type code: CPK.",
       "uses_common_fields": true,
       "type_specific_fields": {
-        "task_id": "string \u2014 TSK message_id this code addresses",
-        "coder_id": "string \u2014 which coder produced this",
+        "task_id": "string — TSK message_id this code addresses",
+        "coder_id": "string — which coder produced this",
         "files_produced": "array of file_object",
-        "tests_written": "array of strings \u2014 test file paths",
-        "test_results": "string \u2014 enum: all_pass | some_fail | not_run",
-        "failing_tests": "array of strings \u2014 descriptions of any failing tests",
-        "known_issues": "array of strings \u2014 issues the coder is aware of",
-        "design_language_compliance_notes": "string \u2014 how the code complies with the design language spec, or deviations with justification"
+        "tests_written": "array of strings — test file paths",
+        "test_results": "string — enum: all_pass | some_fail | not_run",
+        "failing_tests": "array of strings — descriptions of any failing tests",
+        "known_issues": "array of strings — issues the coder is aware of",
+        "design_language_compliance_notes": "string — how the code complies with the design language spec, or deviations with justification"
       },
       "file_object": {
-        "path": "string \u2014 file path relative to repo root",
-        "purpose": "string \u2014 one sentence",
-        "public_items": "array of strings \u2014 names of public functions, structs, traits defined here"
+        "path": "string — file path relative to repo root",
+        "purpose": "string — one sentence",
+        "public_items": "array of strings — names of public functions, structs, traits defined here"
       }
     },
     "review_result": {
-      "description": "Code Reviewer returns findings to SPM. Written to cr_to_spm_{subsystem}.json. Type code: RRS.",
+      "description": "Code Reviewer returns a binary review decision (approved or rejected) to SPM. Written to cr_{subsystem}_to_spm_{subsystem}.json. Type code: RRS. THE AUTHORITATIVE SCHEMA FOR review_result LIVES IN cr_schemas.json. SPM reads this message and must parse it per CR's schema, not this summary. This entry exists only so SPM knows what fields to expect.",
       "uses_common_fields": true,
-      "type_specific_fields": {
-        "task_id": "string \u2014 TSK message_id reviewed",
-        "review_request_id": "string \u2014 RRQ message_id this responds to",
-        "decision": "string \u2014 enum: approved | rejected",
-        "findings": "array of finding_object",
-        "recurring_patterns": "array of strings \u2014 issues seen repeatedly that SPM should address at the coder level",
-        "approved_at": "string \u2014 ISO 8601 or empty string if rejected"
+      "type_specific_fields_summary": {
+        "in_response_to": "string — RRQ message_id",
+        "task_id": "string — task being reviewed",
+        "code_package_id": "string — CPK id",
+        "review_round": "integer",
+        "decision": "string — enum: approved | rejected",
+        "design_language_compliance": "string — enum: compliant | non_compliant",
+        "design_language_violations": "array — DLV objects; if non-empty, decision is rejected",
+        "findings": "array — finding objects with severity enum: critical | major | minor | cosmetic",
+        "blocking_findings_count": "integer",
+        "reviewer_signoff_id": "string — equals message_id when approved, empty string when rejected",
+        "summary": "string",
+        "consistency_check_with_prior_rounds": "string — empty for round 1"
       },
-      "finding_object": {
-        "severity": "string \u2014 enum: blocker | major | minor | suggestion",
-        "location": "string \u2014 file path and line reference",
-        "description": "string \u2014 what is wrong",
-        "required_action": "string \u2014 what must change. Empty string for suggestions."
-      },
-      "cr_sign_off_note": "The message_id of this review_result (when decision is approved) is what SPM uses as cr_sign_off_id in task_completion. The approved_at field is for logging only."
+      "cr_sign_off_note": "When decision is approved, the RRS message_id IS the cr_sign_off_id that SPM puts in task_completion.tcm.cr_sign_off_id. There is no separate signoff ID field to extract.",
+      "dlv_only_rejection_note": "A valid rejection can have blocking_findings_count of 0 if design_language_violations is non-empty. This is a DLV-only rejection. SPM must accept this pattern.",
+      "authoritative_schema_reference": "cr_schemas.json → schemas → review_result"
     },
     "task_completion": {
       "description": "SPM signals to PPM that a task is fully done with all sign-offs. Written to spm_{subsystem}_to_ppm.json. Type code: TCM.",
       "uses_common_fields": true,
       "type_specific_fields": {
-        "task_id": "string \u2014 TSK message_id being marked complete",
-        "completed_at": "string \u2014 ISO 8601",
-        "qa_sign_off_id": "string \u2014 message_id of QA approval",
-        "cr_sign_off_id": "string \u2014 RRS message_id of Code Reviewer approval",
-        "doc_sign_off_id": "string \u2014 message_id of Documenter confirmation, or empty string if no docs required for this task",
-        "artifacts": "array of strings \u2014 file paths to all deliverables",
-        "notes": "string \u2014 anything PPM should know, or empty string"
+        "task_id": "string — TSK message_id being marked complete",
+        "completed_at": "string — ISO 8601",
+        "qa_sign_off_id": "string — message_id of QA approval",
+        "cr_sign_off_id": "string — RRS message_id of Code Reviewer approval",
+        "doc_sign_off_id": "string — message_id of Documenter confirmation, or empty string if no docs required for this task",
+        "artifacts": "array of strings — file paths to all deliverables",
+        "notes": "string — anything PPM should know, or empty string"
       }
     },
     "status_report": {
       "description": "SPM sends daily status to PPM in response to status_report_request. Written to spm_{subsystem}_to_ppm.json. Type code: SRP.",
       "uses_common_fields": true,
       "type_specific_fields": {
-        "report_date": "string \u2014 ISO 8601 date",
-        "reporting_role": "string \u2014 spm identifier e.g. spm_vm_lifecycle",
-        "overall_status": "string \u2014 enum: green | amber | red",
-        "summary": "string \u2014 one to two sentences",
+        "report_date": "string — ISO 8601 date",
+        "reporting_role": "string — spm identifier e.g. spm_vm_lifecycle",
+        "overall_status": "string — enum: green | amber | red",
+        "summary": "string — one to two sentences",
         "active_tasks": "array of active_task_object",
-        "completed_tasks": "array of strings \u2014 task_ids completed since last report",
+        "completed_tasks": "array of strings — task_ids completed since last report",
         "blocked_tasks": "array of blocked_task_object",
-        "coder_queue_depth": "number \u2014 tasks waiting per active coder in this subsystem",
-        "active_coder_count": "integer \u2014 coders currently active in this subsystem",
-        "issues": "array of strings \u2014 things PPM should know that do not rise to an escalation",
-        "requests": "array of strings \u2014 tool or resource requests"
+        "coder_queue_depth": "number — tasks waiting per active coder in this subsystem",
+        "active_coder_count": "integer — coders currently active in this subsystem",
+        "issues": "array of strings — things PPM should know that do not rise to an escalation",
+        "requests": "array of strings — tool or resource requests"
       },
       "active_task_object": {
         "task_id": "string",
         "title": "string",
-        "status": "string \u2014 enum: assigned | in_progress | in_review | qa_pending",
-        "progress_note": "string \u2014 one sentence"
+        "status": "string — enum: assigned | in_progress | in_review | qa_pending",
+        "progress_note": "string — one sentence"
       },
       "blocked_task_object": {
         "task_id": "string",
         "title": "string",
-        "blocked_since": "string \u2014 ISO 8601",
+        "blocked_since": "string — ISO 8601",
         "reason": "string",
         "requires_ppm_action": "boolean"
       }
@@ -141,15 +143,15 @@
       "description": "SPM initiates a joint dispute with another SPM when interface conflict cannot be resolved directly. Written to spm_{subsystem}_to_sd.json. Both SPMs listed as co-authors. PPM notified. Type code: IDP.",
       "uses_common_fields": true,
       "type_specific_fields": {
-        "initiating_spm_id": "string \u2014 this SPM e.g. spm_vm_lifecycle",
-        "other_spm_id": "string \u2014 the other SPM e.g. spm_cow_engine",
-        "interface_id": "string \u2014 the interface in dispute",
-        "spec_reference": "string \u2014 SPR message_id or file path of relevant spec",
-        "initiating_spm_position": "string \u2014 what this SPM believes the contract requires",
-        "other_spm_position": "string \u2014 what the other SPM believes",
-        "conflict_description": "string \u2014 precise description of the disagreement",
-        "attempted_resolutions": "array of strings \u2014 what both tried before escalating",
-        "blocking_tasks": "array of strings \u2014 task_ids blocked pending resolution"
+        "initiating_spm_id": "string — this SPM e.g. spm_vm_lifecycle",
+        "other_spm_id": "string — the other SPM e.g. spm_cow_engine",
+        "interface_id": "string — the interface in dispute",
+        "spec_reference": "string — SPR message_id or file path of relevant spec",
+        "initiating_spm_position": "string — what this SPM believes the contract requires",
+        "other_spm_position": "string — what the other SPM believes",
+        "conflict_description": "string — precise description of the disagreement",
+        "attempted_resolutions": "array of strings — what both tried before escalating",
+        "blocking_tasks": "array of strings — task_ids blocked pending resolution"
       }
     }
   }
