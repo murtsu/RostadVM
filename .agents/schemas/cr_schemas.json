@@ -1,0 +1,128 @@
+{
+  "schema_version": "1.0",
+  "description": "JSON schemas for Code Reviewer (CR) messages. CR is subsystem-specific. Identity: cr_{subsystem} (e.g. cr_vm_lifecycle, cr_storage). One CR per active subsystem. CR is structurally forbidden from reviewing code that CR or the same agent instance produced. Review decisions are binary: approved or rejected. Design language compliance is a hard gate — violations force rejection regardless of other findings.",
+
+  "common_fields": {
+    "note": "Every inbox message includes these fields",
+    "schema_version": "string — always 1.0",
+    "message_type": "string — see type list in CLAUDE.md",
+    "timestamp": "string — ISO 8601",
+    "from_role": "string — sender identifier e.g. cr_vm_lifecycle",
+    "to_role": "string — recipient identifier",
+    "message_id": "string — unique ID following CLAUDE.md convention",
+    "status": "string — enum: unread | pending | done"
+  },
+
+  "schemas": {
+
+    "review_result": {
+      "description": "CR returns a binary review decision (approved or rejected) with all findings listed. Approved results include a reviewer_signoff_id that SPM uses in task_completion. Rejected results list blocking findings that MUST be addressed before resubmission. Type code: RRS.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "in_response_to": "string — RRQ message_id of the review request being answered",
+        "task_id": "string — task being reviewed",
+        "code_package_id": "string — CPK message_id of the submitted code package",
+        "review_round": "integer — starts at 1, incremented each time a new RRQ arrives for the same task_id",
+        "decision": "string — enum: approved | rejected",
+        "design_language_compliance": "string — enum: compliant | non_compliant. If non_compliant, decision MUST be rejected regardless of other factors.",
+        "design_language_violations": "array of design_language_violation_object — empty if compliant, populated if non_compliant",
+        "findings": "array of finding_object — all findings regardless of severity, with blocking flag on each",
+        "blocking_findings_count": "integer — count of findings with blocking: true. If decision is approved, this must be 0.",
+        "reviewer_signoff_id": "string — when decision is approved, this equals the RRS message_id (SPM uses this as cr_sign_off_id in task_completion). When decision is rejected, this is an empty string.",
+        "summary": "string — one to three sentences on what was reviewed and the overall verdict",
+        "consistency_check_with_prior_rounds": "string — for review_round > 1, notes on how this review compares to previous rounds to avoid contradictory requirements. Empty string for round 1."
+      },
+      "finding_object": {
+        "finding_id": "string — unique within this RRS, format F{NN}",
+        "severity": "string — enum: critical | major | minor | cosmetic",
+        "severity_definitions": "critical: code is broken, crashes, corrupts data, or violates security. major: code does not meet spec contract or fails a non-cosmetic test path. minor: code works but has a real quality issue (missing edge case, unclear error message, partial test coverage). cosmetic: pure style or readability, not tied to behaviour.",
+        "blocking": "boolean — MUST be true for severity critical or major. MUST be true for any design_language violation (see DLV below, but DLV items are in design_language_violations array, not findings). MAY be true for minor if accumulation warrants. MUST be false for cosmetic.",
+        "category": "string — enum: correctness | interface_contract | error_handling | performance | readability | test_coverage | other. Note: design_language findings do NOT go here — they go in design_language_violations as DLV objects.",
+        "location": "string — file path and line range e.g. src/vm/shutdown.rs:47-53",
+        "description": "string — what is wrong",
+        "suggested_fix": "string — how to address it; may be empty if CR wants coder to decide",
+        "spec_reference": "string — spec section supporting the finding; empty if not spec-based"
+      },
+      "design_language_violation_object": {
+        "violation_id": "string — unique within this RRS, format DLV{NN}",
+        "rule_violated": "string — specific design language rule e.g. error codes must use VM_ prefix",
+        "location": "string — file path and line",
+        "description": "string — what was observed vs what the design language requires",
+        "rule_reference": "string — section of design_language_spec_v1_1 where the rule lives",
+        "blocking_note": "DLVs are implicitly blocking by the hard gate — they do not appear in findings[] but count toward the rejection decision. SPM validators should treat: decision==rejected AND blocking_findings_count==0 AND design_language_violations is non-empty as a valid DLV-only rejection."
+      }
+    },
+
+    "status_report": {
+      "description": "CR reports its own state to PPM each cycle. Type code: SRP.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "report_date": "string — ISO 8601 date",
+        "overall_status": "string — enum: green | amber | red",
+        "summary": "string — one to two sentences",
+        "reviews_completed_this_cycle": "integer",
+        "reviews_approved": "integer",
+        "reviews_rejected": "integer",
+        "open_reviews": "integer — count of unread or pending RRQ in inbox",
+        "oldest_open_review_age_cycles": "integer — 0 if no open reviews",
+        "design_language_rejection_rate_percent": "number — percentage (0 to 100) of rejections this cycle where design_language_compliance was non_compliant. If more than 40, flag structural concern.",
+        "structural_concerns": "array of structural_concern_object — empty if none"
+      },
+      "structural_concern_object": {
+        "concern_type": "string — enum: coder_pattern | design_language_ambiguity | spec_gap | tooling_gap | review_backlog",
+        "coder_id": "string — populated only when concern_type is coder_pattern, else empty string",
+        "description": "string — what the concern is",
+        "suggested_action": "string — what CR suggests PPM do; may be empty"
+      }
+    },
+
+    "escalation": {
+      "description": "CR escalates to PPM when reviews cannot be completed or when structural issues are detected. Type code: ESC.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "category": "string — enum: self_review_conflict | design_language_ambiguity | spec_conflict | tool_missing | structural_concern",
+        "severity": "string — enum: low | medium | high | critical",
+        "subject": "string — one-line summary",
+        "rationale": "string — why CR cannot resolve this itself",
+        "affected_tasks": "array of strings — task_ids affected",
+        "proposed_resolution": "string — CR's suggestion, may be empty",
+        "requires_decision_by": "string — ISO 8601"
+      }
+    },
+
+    "convention_request": {
+      "description": "CR asks for a ruling when it encounters a situation not covered by CLAUDE.md or the design language spec. Type code: CVR.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "situation": "string — describe what CR encountered",
+        "proposed_convention": "string — what rule CR suggests",
+        "impact_if_delayed": "string — which reviews are blocked",
+        "requires_response_by": "string — ISO 8601"
+      }
+    },
+
+    "tool_request": {
+      "description": "CR requests a review tool that does not yet exist. Routed to MTM (CR tools are part of the review toolset owned by MTM, not by subsystem TMs). Type code: TRQ.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "tool_name": "string — name of the tool being requested",
+        "purpose": "string — what review problem this tool solves",
+        "inputs": "string — what the tool consumes",
+        "outputs": "string — what the tool produces",
+        "blocks_reviews": "array of strings — task_ids currently blocked waiting for this tool",
+        "priority": "string — enum: critical | high | normal"
+      },
+      "note": "CR does NOT request tools from subsystem TM. Review tooling is cross-cutting and lives in MTM's review_toolset. This is per CLAUDE.md v1.8."
+    },
+
+    "notification": {
+      "description": "Standard notification used to point a recipient to an outbox file. Type code: NTF.",
+      "uses_common_fields": true,
+      "type_specific_fields": {
+        "points_to_outbox": "string — path to outbox file",
+        "points_to_message_id": "string — message_id the recipient should find",
+        "summary": "string — one-line context"
+      }
+    }
+  }
+}
