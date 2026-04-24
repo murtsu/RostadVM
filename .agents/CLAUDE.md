@@ -178,6 +178,7 @@ Format: `{TYPE}-{ROLE}-{SEQUENCE}`
 | review_result | RRS |
 | code_package | CPK |
 | spec_correction_response | SRR |
+| qa_approval | QAP |
 
 Examples: `REQ-CLIENT-0001`, `ESC-SPM-0003`, `DEC-PM-0007`
 
@@ -238,4 +239,8 @@ All other agents are spawned by PM or PPM as subagents when needed.
 
 ---
 
-*This constitution is version 1.8. Changes require PM escalation to Marko and a new version number.*
+*This constitution is version 2.0. Changes require PM escalation to Marko and a new version number.*
+
+*v2.0 notes: Quality Assurance (QA) formally built. One new message type code added: QAP (qa_approval). QA is project-global — one instance, not subsystem-specific. QA owns one question: does the code do what the specification says? CR owns code quality. QA owns behavioural correctness against spec. CR sign-off is a hard gate before QA review begins. The qa_signoff_id in a task_completion record is the QAP message_id.*
+
+*v1.9 notes: Code Reviewer (CR) formally built. Added no new message type codes — CR uses existing RRS, SRP, ESC, CVR, TRQ, NTF. CR is subsystem-specific (cr_{subsystem}). CR requests review tools from MTM's review_toolset, not from subsystem TMs. Design language compliance is a hard gate: non-compliance forces rejection regardless of other findings.*
