@@ -1,80 +1,20 @@
 {
   "schema_version": "1.0",
-  "state_owner": "qa",
-  "last_updated": "ISO 8601",
-  "note": "QA is project-global. One instance. Identity: qa. QA reviews completed code packages against subsystem specifications. QA does not review code quality, style, or design language compliance — CR owns those. QA asks only: does this code do what the spec says?",
-
-  "operational_status": {
-    "overall_status": "green",
-    "open_reviews_count": 0,
-    "spec_correction_requests_pending": 0,
-    "reviews_approved_lifetime": 0,
-    "reviews_rejected_lifetime": 0
-  },
-
+  "role": "qa",
+  "last_updated": "",
+  "constitution_version_last_read": "2.0",
+  "operational_status": "green",
   "open_reviews": [],
-
-  "open_review_schema": {
-    "note": "Schema for objects in open_reviews. Not a real entry.",
-    "notification_message_id": "string — NTF from SPM that triggered this review",
-    "task_id": "string",
-    "code_package_id": "string",
-    "cr_signoff_id": "string — must be non-empty for review to proceed",
-    "subsystem": "string",
-    "spec_version": "string",
-    "spec_path": "string",
-    "received_at": "string — ISO 8601",
-    "status": "string — enum: unread | awaiting_cr_signoff | in_progress | completed"
-  },
-
-  "review_history": [],
-
-  "review_history_schema": {
-    "note": "Schema for completed reviews. Retention policy: retain ALL review records for any task_id whose most recent QAP decision is 'rejected' — the task may be resubmitted and prior history is required for context. For task_ids whose most recent decision is 'approved', retain the final approving QAP and prune earlier records once 100 approved tasks have accumulated. This mirrors CR's retention policy for consistency.",
-    "task_id": "string",
-    "subsystem": "string",
-    "qap_message_id": "string",
-    "decision": "string — approved | rejected",
-    "spec_version": "string",
-    "blocking_findings_count": "integer",
-    "spec_sections_flagged": "array of strings — spec sections that generated findings",
-    "completed_at": "string — ISO 8601"
-  },
-
-  "spec_correction_requests": [],
-
-  "spec_correction_request_schema": {
-    "note": "Schema for outstanding SCRs. Not a real entry.",
-    "scr_message_id": "string",
-    "affected_spec": "string",
-    "affected_section": "string",
-    "severity": "string — blocking | non_blocking",
-    "sent_at": "string — ISO 8601",
-    "status": "string — enum: pending | resolved",
-    "resolution_srr_id": "string — SRR message_id from SD when resolved, else empty"
-  },
-
-  "spec_section_rejection_index": {},
-
-  "spec_section_rejection_index_note": "Maps spec_section strings to rejection counts. Populated as reviews complete. Example: {'vm_lifecycle_v1.3 section 2.4': 3}. When a section accumulates 3 or more rejections, QA flags a structural concern in its next status report to PPM — the spec may need clarification.",
-
-  "known_specs": [],
-
-  "known_spec_schema": {
-    "note": "Schema for spec documents QA has loaded and reviewed. Not a real entry.",
-    "subsystem": "string",
-    "spec_version": "string",
-    "spec_path": "string",
-    "loaded_at": "string — ISO 8601",
-    "section_count": "integer"
-  },
-
+  "pending_scrs": [],
+  "completed_reviews": [],
+  "rejection_index": [],
   "sequence_counters": {
     "QAP": 0,
+    "RRS": 0,
     "SCR": 0,
-    "SRP": 0,
     "ESC": 0,
-    "CVR": 0,
+    "SRP": 0,
     "NTF": 0
-  }
+  },
+  "decisions_log": []
 }
