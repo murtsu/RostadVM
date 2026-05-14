@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "role": "sec",
+  "instance": "project-global",
+  "last_updated": "",
+
+  "standards": {
+    "current_version": "",
+    "document_path": "",
+    "published_to": [],
+    "last_updated": ""
+  },
+
+  "open_scr": [],
+
+  "subsystem_coverage": {
+    "vm_lifecycle": "not_started",
+    "storage": "not_started",
+    "networking": "not_started"
+  },
+
+  "release_gate_history": [],
+
+  "session_log": []
+}

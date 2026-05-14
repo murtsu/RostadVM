@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "role": "ux",
+  "instance": "project-global",
+  "last_updated": "",
+
+  "design_specs": [],
+
+  "design_tokens": {
+    "current_version": "",
+    "document_path": "",
+    "published_to": [],
+    "last_updated": ""
+  },
+
+  "open_reviews": [],
+
+  "pending_findings": [],
+
+  "session_log": [],
+
+  "sequence_counters": {
+    "UXR": 0,
+    "CVR": 0,
+    "SRP": 0
+  }
+}

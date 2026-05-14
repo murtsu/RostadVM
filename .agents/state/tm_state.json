@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "role": "tm",
+  "note": "Copy this file to tm_{id}_state.json and fill in tm_id and subsystem_id before first use.",
+  "tm_id": "",
+  "subsystem_id": "",
+  "spm_role": "spm_{subsystem}",
+  "session_count": 0,
+  "active_task": null,
+  "completed_tasks": [],
+  "available_tools": [],
+  "pending_questions": [],
+  "sequence_counters": {
+    "CPK": 0,
+    "SRP": 0,
+    "CVR": 0,
+    "NTF": 0
+  },
+  "task_schema": {
+    "note": "Structure of active_task when a task is in progress",
+    "task_id": "string — from SPM CAG",
+    "cag_message_id": "string — CAG message_id from SPM",
+    "subject": "string",
+    "acceptance_criteria": [],
+    "interface_references": [],
+    "available_tools": [],
+    "status": "received | in_progress | ready_for_review | rework | blocked | done",
+    "cpk_message_id": "string — CPK sent to SPM, or empty",
+    "rework_count": 0,
+    "rework_history": [],
+    "block_reason": "string — reason if blocked, or empty",
+    "sessions_in_current_status": 0,
+    "created_session": 0,
+    "files_touched": []
+  }
+}
