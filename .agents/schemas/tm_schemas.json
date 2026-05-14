@@ -1,74 +1,89 @@
 {
   "schema_version": "1.0",
-  "description": "JSON schemas for TM (Subsystem Tool Maker) message types. TM is subsystem-scoped like SPM. Identity: tm_{subsystem} e.g. tm_vm_lifecycle. One TM per subsystem.",
-  "common_fields": {
-    "note": "Every inbox message includes these fields",
-    "schema_version": "string \u2014 always 1.0",
-    "message_type": "string \u2014 see type list in CLAUDE.md",
-    "timestamp": "string \u2014 ISO 8601",
-    "from_role": "string \u2014 sender identifier",
-    "to_role": "string \u2014 recipient identifier e.g. tm_vm_lifecycle",
-    "message_id": "string \u2014 unique ID following CLAUDE.md convention",
-    "status": "string \u2014 enum: unread | pending | done"
-  },
+  "role": "tm",
+  "note": "TM is instance-specific. All files use tm_{id} naming. Copy and rename before use.",
   "schemas": {
-    "tool_delivery": {
-      "description": "TM confirms a requested tool is built, tested, and ready for use. Written to tm_{subsystem}_to_spm_{subsystem}.json. Notification sent to spm_{subsystem}_inbox.json. If cross_subsystem_candidate was true on the request, notification also sent to mtm_inbox.json. Type code: TDL.",
-      "uses_common_fields": true,
-      "type_specific_fields": {
-        "in_response_to": "string \u2014 TRQ message_id of the tool_request this fulfils",
-        "tool_name": "string \u2014 final name of the tool as delivered",
-        "tool_path": "string \u2014 file path to the tool relative to repo root",
-        "tool_version": "string \u2014 e.g. 1.0.0",
-        "description": "string \u2014 what the tool does",
-        "usage": "string \u2014 how to invoke it. Enough detail that a coder can use it without asking.",
-        "inputs": "string \u2014 what it accepts",
-        "outputs": "string \u2014 what it produces",
-        "test_coverage": "string \u2014 brief description of how the tool was tested",
-        "doc_path": "string \u2014 file path to tool documentation, or empty string if inline",
-        "cross_subsystem_candidate": "boolean \u2014 copied from the original tool_request",
-        "unblocks_tasks": "array of strings \u2014 task_ids that were blocked waiting for this tool"
-      }
-    },
-    "tool_update": {
-      "description": "TM delivers an update to an existing tool. Written to tm_{subsystem}_to_spm_{subsystem}.json. Type code: TUP \u2014 distinct from TDL which is for initial delivery.",
-      "uses_common_fields": true,
-      "type_specific_fields": {
-        "in_response_to": "string \u2014 TDL message_id of the original delivery being updated, or TRQ message_id if this update was explicitly requested",
-        "tool_name": "string",
-        "tool_path": "string",
-        "previous_version": "string \u2014 version being superseded",
-        "new_version": "string",
-        "change_description": "string \u2014 what changed and why",
-        "breaking_changes": "boolean \u2014 true if existing coder usage must be updated",
-        "migration_notes": "string \u2014 how to migrate if breaking_changes is true, or empty string"
+    "code_package": {
+      "description": "TM submits completed code to SPM for CR review (CPK)",
+      "message_type": "code_package",
+      "type_code": "CPK",
+      "fields": {
+        "schema_version": "1.0",
+        "message_type": "code_package",
+        "timestamp": "ISO 8601",
+        "from_role": "tm_{id}",
+        "to_role": "spm_{subsystem}",
+        "message_id": "CPK-TM{ID}-{SEQUENCE}",
+        "status": "unread",
+        "task_id": "Task ID from SPM coder_assignment",
+        "cag_message_id": "CAG message_id from SPM — traceability",
+        "acceptance_criteria": ["Verbatim from CAG — every criterion listed"],
+        "files_changed": [
+          {
+            "path": "relative file path",
+            "action": "created | modified | deleted",
+            "description": "what changed and why"
+          }
+        ],
+        "implementation_summary": "What was built, key decisions made, any deviations from naive interpretation of the spec and why",
+        "test_results": {
+          "tests_run": 0,
+          "tests_passed": 0,
+          "tests_failed": 0,
+          "test_output": "relevant excerpt or 'all passed'"
+        },
+        "known_limitations": "Any known edge cases not covered, or empty string",
+        "rework_history": [
+          {
+            "rejection_round": 1,
+            "findings_addressed": ["List of CR findings and how each was fixed"]
+          }
+        ]
       }
     },
     "status_report": {
-      "description": "TM sends daily status to PPM in response to status_report_request. Type code: SRP.",
-      "uses_common_fields": true,
-      "type_specific_fields": {
-        "report_date": "string \u2014 ISO 8601 date",
-        "reporting_role": "string \u2014 tm identifier e.g. tm_vm_lifecycle",
-        "overall_status": "string \u2014 enum: green | amber | red",
-        "summary": "string \u2014 one to two sentences",
-        "tools_built": "integer \u2014 total tools in the subsystem registry",
-        "open_requests": "integer \u2014 pending tool_requests not yet fulfilled",
-        "active_builds": "array of strings \u2014 tool names currently being built",
-        "blocked_requests": "array of strings \u2014 tool names blocked e.g. waiting on dependency",
-        "cross_subsystem_candidates_flagged": "array of strings \u2014 tool names flagged for MTM review this cycle",
-        "issues": "array of strings \u2014 anything PPM should know"
+      "description": "TM reports status or asks questions to SPM (SRP)",
+      "message_type": "status_report",
+      "type_code": "SRP",
+      "fields": {
+        "schema_version": "1.0",
+        "message_type": "status_report",
+        "timestamp": "ISO 8601",
+        "from_role": "tm_{id}",
+        "to_role": "spm_{subsystem}",
+        "message_id": "SRP-TM{ID}-{SEQUENCE}",
+        "status": "unread",
+        "report_type": "acknowledgement | question | block | rework_dispute | escalation",
+        "task_id": "Task ID this report relates to, or empty string",
+        "current_task_status": "received | in_progress | ready_for_review | rework | blocked",
+        "message": "Full description of status, question, or issue",
+        "questions": [
+          {
+            "question_id": 1,
+            "question": "Specific question requiring SPM answer before work can continue",
+            "blocking": true
+          }
+        ],
+        "block_reason": "If report_type is block: specific reason for blockage",
+        "estimated_sessions_to_complete": 0
       }
     },
-    "coverage_notice": {
-      "description": "MTM sends this to TM when entering or exiting coverage mode for this subsystem. Type code: CVN.",
-      "uses_common_fields": true,
-      "type_specific_fields": {
-        "active": "boolean \u2014 true when coverage is starting, false when coverage is ending",
-        "coverage_start": "string \u2014 ISO 8601 timestamp when coverage began, or empty string if active is false",
-        "reason": "string \u2014 why MTM is providing coverage",
-        "tools_delivered_during_coverage": "array of strings \u2014 tool names MTM built during coverage. Only populated when active is false (coverage ending).",
-        "resume_instructions": "string \u2014 any notes for TM on resuming normal operation, or empty string"
+    "convention_request_to_spm": {
+      "description": "TM raises uncovered situation to SPM (CVR) — SPM forwards to PM if needed",
+      "message_type": "convention_request",
+      "type_code": "CVR",
+      "fields": {
+        "schema_version": "1.0",
+        "message_type": "convention_request",
+        "timestamp": "ISO 8601",
+        "from_role": "tm_{id}",
+        "to_role": "spm_{subsystem}",
+        "message_id": "CVR-TM{ID}-{SEQUENCE}",
+        "status": "unread",
+        "subject": "One line description of the uncovered situation",
+        "situation": "Full description of what was encountered",
+        "proposed_convention": "What convention the TM proposes to adopt",
+        "blocking_task": "Task ID blocked by this gap, or empty string"
       }
     }
   }
