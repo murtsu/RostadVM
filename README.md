@@ -5,9 +5,7 @@
 If you have views, share them.
 Every serious opinion will be considered.
 That is not a courtesy line. It is how good software gets built.
-
 Update: For those really interested there's a cookbook up explaining how to use this.
-
 ---
 
 ## What this is
@@ -50,10 +48,6 @@ Bash proved the idea and is now the ceiling.
 The rewrite is in Rust.
 I am learning Rust while building it.
 Which is either the correct way to learn a language or a sign I need more sleep.
-
-The codebase is structured as a Rust workspace.
-The MTM role owns a shared `common` crate at the workspace root.
-Subsystem crates use it. They do not duplicate it.
 
 The multi-agent AI engineering organisation that is building it is described below.
 The org structure document is in this repository.
@@ -164,175 +158,205 @@ It will explain why things are designed the way they are.
 |---|---|
 | Bash prototype | Working |
 | Rust rewrite | In progress |
-| Rust workspace architecture | Decided — MTM owns shared `common` crate |
-| Agent org structure | Defined, v2.0 |
-| Agents built | 8 of 15 (PM, PPM, SD, CR, QA, SPM, TM, MTM) |
-| Agents remaining | SEC, UX, DOC, TEST, INT, CMVC, INFRA |
-| Interface specification | v1.8 — 32 message types |
-| CLAUDE.md | v2.3 |
+| Agent org structure | v2.0. CLAUDE.md v2.4. Interface Spec v1.9 |
+| Agents built | 10 of 15 |
 | Desktop UI | Designed, not yet built |
 | Documentation | In progress |
 
 ---
 
-# Contract Coding, Part 1. Explained with a wedding that's not fat, greek or from hell.
+# Contract Coding, Part 1. Explained with a wedding thats not fat, greek or from hell. 
+The dinner party metaphor I used last day was almost right.
 
-The dinner party metaphor I used last time was almost right.
+The problem with dinner parties is that when they go wrong, you can try again next Saturday. 
 
-The problem with dinner parties is that when they go wrong, you can try again next Saturday.
+A wedding is better. 
 
-A wedding is better.
+A wedding has one shot. The agents are loaded at 14:00 and they run until the last guest leaves. There is no second run. There is no staging
+environment. There is no rollback. 
 
-A wedding has one shot. The agents are loaded at 14:00 and they run until the last guest leaves. There is no second run. There is no staging environment. There is no rollback.
+If the seating chart is wrong on the day, the seating chart is wrong on the day. 
 
-If the seating chart is wrong on the day, the seating chart is wrong on the day.
-
-## The table
+# The table 
 
 Picture a wedding reception. One hundred and twenty guests. A long head table for the wedding party. Eight round tables for everyone else.
 
-Each table seats fifteen.
+Each table seats fifteen. 
 
-The people who need to be seated include:
+The people who need to be seated include: 
 
-The groom's family, half of whom have not spoken to the other half since an argument about a will in 2019.
+The groom’s family, half of whom have not spoken to the other half since an argument about a will in 2019. 
 
-The bride's parents, who are divorced and have each brought a new partner, and who agreed in writing to be civil but whose history suggests optimism.
+The bride’s parents, who are divorced and have each brought a new partner, and who agreed in writing to be civil but whose history suggests
+optimism. 
 
-The best man, who dated the maid of honour for three years and ended it badly, and who is seated with the wedding party regardless because protocol demands it.
+The best man, who dated the maid of honour for three years and ended it badly, and who is seated with the wedding party regardless because
+protocol demands it. 
 
-Four colleagues of the groom who know each other from work, speak only to each other at parties, and should under no circumstances be placed near the grandfather who will ask each of them what they do for a living and then explain why it is not a real job.
+Four colleagues of the groom who know each other from work, speak only to each other at parties, and should under no circumstances be
+placed near the grandfather who will ask each of them what they do for a living and then explain why it is not a real job. 
 
-A table of university friends who have not seen each other in twelve years and will either have the best night of the decade or relitigate a decade of unresolved grievances within forty minutes of the first glass.
+A table of university friends who have not seen each other in twelve years and will either have the best night of the decade or relitigate a
+decade of unresolved grievances within forty minutes of the first glass. 
 
-And the cousin. Who is always the cousin. Who does not need further description.
+And the cousin. Who is always the cousin. Who does not need further description. 
 
-This is your agent organisation.
+This is your agent organisation. 
 
-One hundred and twenty participants. Multiple incompatibilities. Defined roles for some, undefined expectations for others. Shared history that creates both connection and risk. A strict sequence of events — arrival, drinks, seating, speeches, dinner, dancing — that must coordinate across all participants simultaneously.
 
-Nobody is going to supervise this in real time.
+One hundred and twenty participants. Multiple incompatibilities. Defined roles for some, undefined expectations for others. Shared history that
+creates both connection and risk. A strict sequence of events — arrival, drinks, seating, speeches, dinner, dancing — that must coordinate
+across all participants simultaneously. 
 
-Not even the wedding planner.
+Nobody is going to supervise this in real time. 
 
-The wedding planner wrote the seating chart.
+Not even the wedding planner. 
 
-## What the seating chart actually is
+The wedding planner wrote the seating chart. 
 
-It is a contract.
+# What the seating chart actually is 
 
-It specifies who sits next to whom and, implicitly, what conversations are permitted to occur.
+It is a contract. 
 
-It specifies who faces the head table and who does not — a hierarchy decision disguised as logistics.
+It specifies who sits next to whom and, implicitly, what conversations are permitted to occur. 
 
-It specifies which tables receive which courses first — a sequencing decision that affects the timing of speeches.
+It specifies who faces the head table and who does not — a hierarchy decision disguised as logistics. 
 
-It specifies where the exits are relative to the grandfather, and where the bar is relative to the cousin. Both are non-trivial architectural decisions.
+It specifies which tables receive which courses first — a sequencing decision that affects the timing of speeches. 
 
-A good seating chart has been reviewed three times and has caught at least eleven things that would have ruined the evening. The divorced parents cannot share a sightline. The best man and maid of honour must be physically separated during the speeches. The university friends table must be near the dancing floor because they are unpredictable and should be allowed to move.
+It specifies where the exits are relative to the grandfather, and where the bar is relative to the cousin. Both are non-trivial architectural
+decisions. 
 
-A bad seating chart was done the night before the wedding because there was too much else to do.
-You can tell the difference by the third round of drinks.
+A good seating chart has been reviewed three times and has caught at least eleven things that would have ruined the evening. The divorced
 
-## The speeches are also contracts
+parents cannot share a sightline. The best man and maid of honour must be physically separated during the speeches. The university friends
 
-There is a protocol for speeches. Best man goes third. Father of the bride goes first. Someone from the groom's side goes second. Each speech has a rough duration and a defined tone.
+table must be near the dancing floor because they are unpredictable and should be allowed to move. 
 
-This protocol exists because an uncontracted speech situation produces one of two outcomes.
+A bad seating chart was done the night before the wedding because there was too much else to do. 
+You can tell the difference by the third round of drinks. 
 
-Either everyone looks at each other waiting for someone to go first, which creates a silence that feels much longer than it is, until the most confident person in the room takes over, which is not always the right person.
+# The speeches are also contracts 
 
-Or everyone tries to go at once, which produces the verbal equivalent of a race condition.
 
-The speech protocol is a message schema. It defines senders, recipients, content guidelines, and sequencing. The best man is not permitted to send a message of type `embarrassing_childhood_story` until after the father of the bride has sent a message of type `formal_welcome`. The cousin is not in the approved sender list at all.
+There is a protocol for speeches. Best man goes third. Father of the bride goes first. Someone from the groom’s side goes second. Each speech
+has a rough duration and a defined tone.This protocol exists because an uncontracted speech situation produces one of two outcomes. 
 
-This is CLAUDE.md.
+Either everyone looks at each other waiting for someone to go first, which creates a silence that feels much longer than it is, until the most
 
-## Where it goes wrong without contracts
+confident person in the room takes over, which is not always the right person. 
 
-Here is a real failure mode from the world of weddings.
+Or everyone tries to go at once, which produces the verbal equivalent of a race condition. 
 
-Two tables are adjacent. Both tables include guests from the groom's extended family. Nobody told table seven that table eight contains the branch of the family they stopped speaking to. Nobody wrote this down because it felt awkward to write down.
+The speech protocol is a message schema. It defines senders, recipients, content guidelines, and sequencing. The best man is not permitted to
 
-Both tables receive their starters at the same time.
+send a message of type “embarrassing_childhood_story” until after the father of the bride has sent a message of type “formal_welcome.” The
 
-Someone at table seven makes eye contact with someone at table eight.
+cousin is not in the approved sender list at all. 
 
-The evening recovers. Barely. Not because the wedding planner intervened — the wedding planner is managing a catering crisis in the kitchen. It recovers because one guest at table seven quietly de-escalates what is about to happen.
+This is CLAUDE.md. 
 
-The wedding planner got lucky.
+Where it goes wrong without contracts 
 
-In a multi-agent system, there is no luck. There is no quiet guest who de-escalates. There is just the message that was sent and the message that was not expected and the agent that does not know what to do with the message it received.
+Here is a real failure mode from the world of weddings. 
 
-The system stalls.
+Two tables are adjacent. Both tables include guests from the groom’s extended family. Nobody told table seven that table eight contains the
 
-The agents sit in their rooms holding notes they do not understand.
+branch of the family they stopped speaking to. Nobody wrote this down because it felt awkward to write down. 
 
-The reception is technically still going but nobody is dancing.
+Both tables receive their starters at the same time. 
 
-## What contract coding produces at a wedding
+Someone at table seven makes eye contact with someone at table eight. 
 
-The wedding planner has done the following:
+The evening recovers. Barely. Not because the wedding planner intervened — the wedding planner is managing a catering crisis in the kitchen.
 
-She has specified every table's composition with rationale. Not just "table six: these eight people" but "table six: colleagues from the bride's workplace who share the common denominator of not knowing anyone else at the wedding and will bond over this."
+It recovers because one guest at table seven quietly de-escalates what is about to happen. 
 
-She has specified every adjacency that cannot happen, with explanation. "Bride's father and bride's stepfather: not adjacent, not sightline, not same table."
+The wedding planner got lucky. 
 
-She has specified the speech sequence, the timing, the signal for when each speaker should rise.
+In a multi-agent system, there is no luck. There is no quiet guest who de-escalates. There is just the message that was sent and the message
 
-She has specified the escalation path. If something goes wrong that the waiting staff cannot handle, they tell the wedding coordinator, not the bride.
+that was not expected and the agent that does not know what to do with the message it received. 
 
-She has reviewed the seating chart three times and found nine conflicts she resolved before the day.
+The system stalls. 
 
-She has published the seating chart to the venue, the catering manager, the band, and the ushers.
+The agents sit in their rooms holding notes they do not understand. 
 
-And on the day of the wedding she sits at the edge of the room with a glass of wine and watches the evening conduct itself.
+The reception is technically still going but nobody is dancing. 
 
-The contracts are the reason she gets to sit down.
+What contract coding produces at a wedding 
 
-## The question every engineer avoids
+The wedding planner has done the following: 
 
-Everyone who has ever run a complex system — a wedding, a software project, a kitchen during a busy service, a battlefield — knows that the contracts matter.
+She has specified every table’s composition with rationale. Not just “table six: these eight people” but “table six: colleagues from the bride’s
 
-The question they avoid is: how complete do the contracts need to be before you run the system?
+workplace who share the common denominator of not knowing anyone else at the wedding and will bond over this.” 
 
-The honest answer is that the contracts need to be complete enough that the most likely failure modes are handled, and specific enough that the agents can follow them without asking you what you meant.
+She has specified every adjacency that cannot happen, with explanation. “Bride’s father and bride’s stepfather: not adjacent, not sightline, not
 
-Not perfect. Complete enough.
+same table.” 
 
-For the wedding planner this means: every known incompatibility is addressed. Every role has a defined responsibility. Every escalation path has a named handler. Every sequence has a defined trigger.
+She has specified the speech sequence, the timing, the signal for when each speaker should rise. 
 
-For contract coding this means the same things.
+She has specified the escalation path. If something goes wrong that the waiting staff cannot handle, they tell the wedding coordinator, not the
 
-The difference between "complete enough" and "done" is the bugs you find in review rather than at runtime.
+bride. 
 
-I have found eighty-eight of them so far.
+She has reviewed the seating chart three times and found nine conflicts she resolved before the day. 
 
-The wedding had not started yet.
+She has published the seating chart to the venue, the catering manager, the band, and the ushers. 
 
-## Part 2 will be about what happens when the wedding starts anyway
+And on the day of the wedding she sits at the edge of the room with a glass of wine and watches the evening conduct itself. 
 
-At some point you stop reviewing the seating chart and the guests arrive.
+The contracts are the reason she gets to sit down. 
 
-That is the first orchestration run.
+The question every engineer avoids 
 
-I do not know when it is.
+Everyone who has ever run a complex system — a wedding, a software project, a kitchen during a busy service, a battlefield — knows that the
 
-But the contracts are getting there.
+contracts matter. 
 
-## The duck approves
+The question they avoid is: how complete do the contracts need to be before you run the system? 
 
-github.com/murtsu/RostadVM
+The honest answer is that the contracts need to be complete enough that the most likely failure modes are handled, and specific enough that
 
-Apache 2.0. The seating chart is open. Anyone can check the adjacencies.
+the agents can follow them without asking you what you meant. 
 
-If you find a conflict I missed, open an issue.
+Not perfect. Complete enough. 
 
-The wedding is not yet scheduled.
+For the wedding planner this means: every known incompatibility is addressed. Every role has a defined responsibility. Every escalation path
 
-The planning is almost done.
+has a named handler. Every sequence has a defined trigger.For contract coding this means the same things. 
 
----
+The difference between “complete enough” and “done” is the bugs you find in review rather than at runtime. 
+
+I have found ninety-two of them so far. 
+
+The wedding had not started yet. 
+
+Part 2 will be about what happens when the wedding starts anyway 
+
+
+At some point you stop reviewing the seating chart and the guests arrive. 
+
+That is first orchestration run. 
+
+I do not know when it is. 
+
+But the contracts are getting there. 
+
+The duck approves 
+
+github.com/murtsu/RostadVM 
+
+Apache 2.0. The seating chart is open. Anyone can check the adjacencies. 
+
+If you find a conflict I missed, open an issue. 
+
+The wedding is not yet scheduled. 
+
+The planning is almost done
+
 
 *Views, questions, and contributions welcome.*
 *This is young. Help make it less young.*
