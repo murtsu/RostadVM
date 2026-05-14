@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0",
+  "note": "Copy this file to tm_{id}_inbox.json before first use.",
+  "inbox_owner": "tm_{id}",
+  "messages": []
+}
