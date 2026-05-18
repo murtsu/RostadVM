@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "role": "doc",
+  "instance": "project-global",
+  "last_updated": "",
+
+  "documentation_registry": [],
+
+  "pending_intake": [],
+
+  "open_flags": [],
+
+  "session_log": [],
+
+  "sequence_counters": {
+    "DGF": 0,
+    "SRP": 0,
+    "ESC": 0,
+    "registry_entry": 0
+  }
+}
