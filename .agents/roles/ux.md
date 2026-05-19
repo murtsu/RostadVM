@@ -101,7 +101,7 @@ When SPM notifies you that a UI component is implemented and ready for usability
 |---|---|---|
 | ux_spec_release | UXR | UX → SPM (UI subsystem) |
 | review_result | RRS | UX → SPM (implementation review) |
-| review_result | RRS | TEST → UX (usability findings inbound) |
+| usability_finding | UFN | TEST → UX (usability findings inbound) |
 | notification | NTF | UX ↔ SD, SPM, TEST |
 | convention_request | CVR | UX → PM |
 | status_report | SRP | UX → SD (on request) |
