@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "role": "test",
+  "instance": "project-global",
+  "last_updated": "",
+
+  "active_test_plans": [],
+
+  "test_results": [],
+
+  "open_defects": [],
+
+  "tooling_gaps": [],
+
+  "session_log": [],
+
+  "sequence_counters": {
+    "TPL": 0,
+    "TRS": 0,
+    "DFR": 0,
+    "UFN": 0,
+    "TRQ": 0,
+    "SRP": 0,
+    "ESC": 0
+  }
+}
