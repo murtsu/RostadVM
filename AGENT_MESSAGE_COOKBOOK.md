@@ -1,8 +1,12 @@
 # Agent Message Cookbook
 
-Concise examples of every message type in the VM Framework agent system. Copy, adapt, send.
+Everything that gets said in this system, who says it, and what it looks like.
 
-**Companion to:** `CLAUDE.md` v1.8 and `INTERFACE_SPECIFICATION.md`
+**Companion to:** `CLAUDE.md` v2.5 and `INTERFACE_SPECIFICATION.md` v2.0
+
+If you are reading this for the first time: welcome. The system runs on JSON messages passed between agents through outbox and inbox files. Nothing happens unless a message was sent. Nothing is visible unless a notification followed it. If something appears broken, check whether the notification was written. It usually wasn't.
+
+If you are reading this because something broke: check the message ID sequence counter in your state file. You reused one. You know you did.
 
 ---
 
@@ -10,25 +14,33 @@ Concise examples of every message type in the VM Framework agent system. Copy, a
 
 Each entry follows the same structure:
 
-- **What it does** — one sentence
-- **Who sends it** — the role that writes this message
-- **Example** — copy-ready JSON with realistic values
+**What it does** — one sentence. If the one sentence requires a footnote, the design has a problem.
 
-Every message ID follows the pattern `{TYPE}-{ROLE}-{SEQUENCE}`. Increment the sequence counter in your state file after every send.
+**Who sends it** — the role that writes this message, and to whom.
+
+**Example** — copy-ready JSON with realistic values. Replace the values. Keep the structure. Do not invent new fields; write a convention_request if you think you need one.
+
+Every message ID follows the pattern `{TYPE}-{ROLE}-{SEQUENCE}`. Increment the sequence counter in your state file after every send. The system has no memory between sessions. The counter is your memory.
+
+Three rules that prevent most incidents:
+
+1. After every outbox write, append a `notification` (NTF) to the recipient's inbox. Without this, the message exists but is invisible. It is the tree that fell in the forest with nobody around.
+2. Set `status: unread` on every outgoing message. The recipient sets it to `pending` when acting, `done` when resolved. You do not set it to `done` for them.
+3. Never write to another agent's state file. You may read any state file. Writing to someone else's is the fastest way to corrupt the entire session.
 
 ---
 
 ## v1.0 — Core protocol
 
-The six messages that make Marko, PM, and PPM able to talk at all.
+Six messages. Enough to let Marko, PM, and PPM start a conversation. Everything else builds on these.
 
-## `REQ` — client_request
+---
 
-**What it does:** Marko (or any external client) enters the system with a request.
+### `REQ` — client_request
+
+**What it does:** Marko enters the system with a request. This is where everything starts.
 
 **Who sends it:** `client` (Marko) → `pm`
-
-**Example:**
 
 ```json
 {
@@ -49,13 +61,13 @@ The six messages that make Marko, PM, and PPM able to talk at all.
 
 ---
 
-## `RPT` — consolidated_report
+### `RPT` — consolidated_report
 
-**What it does:** PPM gives the PM one unified status report per cycle, collected from every internal role.
+**What it does:** PPM gives PM one report per cycle covering every role. One report. Not fourteen.
 
 **Who sends it:** `ppm` → `pm`
 
-**Example:**
+The PM receives exactly one of these per day. PPM collects from everyone else so that PM does not drown in individual updates. If PM is receiving status directly from SPMs, something has broken upstream.
 
 ```json
 {
@@ -72,7 +84,7 @@ The six messages that make Marko, PM, and PPM able to talk at all.
   "open_escalations": 0,
   "key_events": [
     "Spec v1.3 of vm_lifecycle released after Marko reflection sign-off",
-    "Coder scale-up triggered for spm_storage (queue depth 4 for two cycles)"
+    "Coder scale-up triggered for spm_storage — queue depth 4 for two cycles"
   ],
   "requires_client_decision": []
 }
@@ -80,13 +92,13 @@ The six messages that make Marko, PM, and PPM able to talk at all.
 
 ---
 
-## `ESC` — escalation
+### `ESC` — escalation
 
-**What it does:** Any role escalates an issue upward that it cannot resolve alone.
+**What it does:** Any role escalates an issue it cannot resolve alone.
 
-**Who sends it:** Any internal role → `pm` (or upward in the hierarchy)
+**Who sends it:** Any internal role → upward in the hierarchy (usually `ppm`, sometimes `pm`)
 
-**Example:**
+`rationale` is mandatory. An escalation without rationale is a call for help with no information in it. The system will not reject it but the PM will.
 
 ```json
 {
@@ -99,8 +111,8 @@ The six messages that make Marko, PM, and PPM able to talk at all.
   "status": "unread",
   "category": "resource_conflict",
   "severity": "high",
-  "subject": "Two tasks require the same tool and cannot run in parallel",
-  "rationale": "Task TSK-0044 and TSK-0051 both require exclusive write access to the Libvirt storage pool. Running them sequentially adds 40 minutes to the cycle. Proposing we split the pool into two named volumes.",
+  "subject": "Two tasks require exclusive pool access and cannot run in parallel",
+  "rationale": "TSK-0044 and TSK-0051 both require exclusive write access to the Libvirt storage pool. Sequential execution adds 40 minutes to the cycle.",
   "blocking_tasks": ["TSK-0044", "TSK-0051"],
   "proposed_resolution": "Request from INFRA: provision second storage pool named vm_backup_pool.",
   "requires_decision_by": "2026-04-21T12:00:00Z"
@@ -109,13 +121,11 @@ The six messages that make Marko, PM, and PPM able to talk at all.
 
 ---
 
-## `DEC` — pm_decision
+### `DEC` — pm_decision
 
-**What it does:** PM returns a decision in response to an escalation or a client request.
+**What it does:** PM returns a decision in response to an escalation or request. `rationale` and `instructions` are both mandatory and both must be non-empty.
 
 **Who sends it:** `pm` → any internal role
-
-**Example:**
 
 ```json
 {
@@ -127,22 +137,21 @@ The six messages that make Marko, PM, and PPM able to talk at all.
   "message_id": "DEC-PM-0021",
   "status": "unread",
   "in_response_to": "ESC-SPM-STORAGE-0003",
-  "decision": "Approved. Proceed with second storage pool.",
-  "rationale": "Marko confirmed storage expansion is within infrastructure budget. Splitting the pool is cheaper than sequential task execution.",
-  "action_required": "PPM to coordinate with INFRA for provisioning. New pool name: vm_backup_pool.",
+  "decision": "approved",
+  "rationale": "Marko confirmed storage expansion is within infrastructure budget. Splitting the pool is cheaper than sequential execution.",
+  "instructions": "PPM to coordinate with INFRA for provisioning. New pool name: vm_backup_pool.",
+  "affects_roles": ["spm_storage", "infra"],
   "deadline": "2026-04-22T17:00:00Z"
 }
 ```
 
 ---
 
-## `PLN` — project_plan
+### `PLN` — project_plan
 
-**What it does:** PM hands PPM the authoritative project plan with milestones and acceptance criteria.
+**What it does:** PM hands PPM the authoritative project plan.
 
 **Who sends it:** `pm` → `ppm`
-
-**Example:**
 
 ```json
 {
@@ -166,24 +175,22 @@ The six messages that make Marko, PM, and PPM able to talk at all.
     {
       "milestone_id": "M2",
       "title": "5-second restore proven end-to-end",
-      "acceptance_criteria": "Snapshot, corrupt, restore. Full VM functional in < 5 seconds.",
+      "acceptance_criteria": "Snapshot, corrupt, restore. Full VM functional in under 5 seconds.",
       "target_date": "2026-06-15"
     }
   ],
-  "constraints": "Rust-only for core framework. Libvirt as hypervisor abstraction.",
+  "constraints": "Rust only for core framework. Libvirt as hypervisor abstraction.",
   "non_goals": "No GUI in MVP. No multi-node deployment."
 }
 ```
 
 ---
 
-## `CRP` — client_report
+### `CRP` — client_report
 
-**What it does:** PM reports outward to Marko with a summary of progress and anything that needs his input.
+**What it does:** PM reports outward to Marko.
 
 **Who sends it:** `pm` → `client` (Marko)
-
-**Example:**
 
 ```json
 {
@@ -209,15 +216,17 @@ The six messages that make Marko, PM, and PPM able to talk at all.
 
 ## v1.1 — Notifications and disputes
 
-The trigger mechanism, plus the first tools for handling disagreements.
+The trigger mechanism that makes outbox writes visible, and the first tools for handling disagreements before they become escalations.
 
-## `NTF` — notification
+---
 
-**What it does:** Tells a recipient to check a specific outbox file. Without this, outbox writes are invisible.
+### `NTF` — notification
+
+**What it does:** Tells a recipient that content is waiting in a specific outbox file.
 
 **Who sends it:** Any role → any role
 
-**Example:**
+This is the most sent message in the system. Every outbox write must be followed by one of these. The outbox write is the letter. The notification is the knock on the door. Without the knock, nobody knows the letter arrived.
 
 ```json
 {
@@ -236,13 +245,13 @@ The trigger mechanism, plus the first tools for handling disagreements.
 
 ---
 
-## `CVR` — convention_request
+### `CVR` — convention_request
 
-**What it does:** An agent hits a situation not covered by CLAUDE.md and asks for a ruling instead of improvising.
+**What it does:** An agent encounters a situation CLAUDE.md does not cover and asks for a ruling.
 
 **Who sends it:** Any role → `pm` (via hierarchy)
 
-**Example:**
+The alternative to writing a CVR is improvising. Improvising is not permitted. If the situation is not covered, write the CVR, block the task, and wait. The PM decides. CLAUDE.md gets updated. The version number increments. This is the correct path even when it feels slow.
 
 ```json
 {
@@ -253,22 +262,23 @@ The trigger mechanism, plus the first tools for handling disagreements.
   "to_role": "ppm",
   "message_id": "CVR-SPM-NETWORKING-0002",
   "status": "unread",
-  "situation": "Coder submitted a code_package with passing tests but the tests cover only 40 percent of the interface contract. CLAUDE.md does not specify minimum coverage.",
-  "proposed_convention": "Minimum 70 percent interface coverage required. Below threshold: SPM rejects back to coder with specific uncovered cases.",
-  "impact_if_delayed": "TSK-0058 cannot proceed. Three downstream tasks blocked.",
+  "subject": "Minimum interface coverage threshold not defined in CLAUDE.md",
+  "situation": "Coder submitted a code_package with passing tests covering only 40 percent of the interface contract. CLAUDE.md does not specify a minimum coverage threshold.",
+  "proposed_convention": "Minimum 70 percent interface coverage required. Below threshold: SPM rejects back to coder with specific uncovered cases identified.",
+  "blocking_task": "TSK-0058",
   "requires_response_by": "2026-04-21T17:00:00Z"
 }
 ```
 
 ---
 
-## `SCR` — spec_correction_request
+### `SCR` — spec_correction_request
 
-**What it does:** QA or SEC spots a problem rooted in the spec, not in the code. Requests SD to fix the spec.
+**What it does:** QA or SEC identifies a problem rooted in the spec itself, not the code. Routes directly to SD.
 
 **Who sends it:** `qa` or `sec` → `sd`
 
-**Example:**
+This bypasses the normal implementation loop. The problem is in the specification. Going through PPM to get to SD is unnecessary overhead when the destination and the fix are both clear.
 
 ```json
 {
@@ -281,103 +291,62 @@ The trigger mechanism, plus the first tools for handling disagreements.
   "status": "unread",
   "affected_spec": "storage_subsystem_v1.1",
   "affected_section": "Section 3.2: Snapshot manifest format",
-  "problem": "Spec requires checksum field but does not specify algorithm. Implementations chose SHA-256 and MD5 respectively. Restore cannot verify across them.",
-  "severity": "high",
-  "proposed_correction": "Specify SHA-256 explicitly. Add migration note for existing SHA-256 and MD5 manifests.",
-  "blocks_tasks": ["TSK-0061", "TSK-0062"]
+  "problem": "Spec requires a checksum field but does not specify the algorithm. Implementations will diverge.",
+  "proposed_fix": "Add: checksum_algorithm: string — enum: sha256 | blake3. Default: sha256.",
+  "blocking_task": "TSK-0044",
+  "severity": "high"
 }
 ```
 
 ---
 
-## `SRR` — spec_correction_response
+### `IDP` — interface_dispute
 
-**What it does:** SD responds to a spec_correction_request within one cycle with accept, partially accept, or reject.
+**What it does:** An SPM raises a dispute about an interface contract between two subsystems. SD resolves. PM stays out of it.
 
-**Who sends it:** `sd` → `qa` or `sec`
-
-**Example:**
-
-```json
-{
-  "schema_version": "1.0",
-  "message_type": "spec_correction_response",
-  "timestamp": "2026-04-20T16:30:00Z",
-  "from_role": "sd",
-  "to_role": "qa",
-  "message_id": "SRR-SD-0007",
-  "status": "unread",
-  "in_response_to": "SCR-QA-0007",
-  "decision": "accepted",
-  "rationale": "Algorithm ambiguity is a real defect. Specifying SHA-256 only; MD5 manifests must be regenerated. No partial migration.",
-  "spec_update": {
-    "new_spec_version": "1.2",
-    "changed_sections": ["3.2"],
-    "spec_path": "docs/specs/storage_subsystem_v1.2.md"
-  },
-  "ppm_action_required": true,
-  "action_description": "Notify affected SPMs to invalidate MD5 manifests and regenerate."
-}
-```
-
----
-
-## `IDP` — interface_dispute
-
-**What it does:** Two SPMs cannot agree on an interface contract. They jointly submit to SD for binding resolution.
-
-**Who sends it:** `spm` (initiating) → `sd` (with other SPM as co-author)
-
-**Example:**
+**Who sends it:** `spm` (initiating party) → `sd`
 
 ```json
 {
   "schema_version": "1.0",
   "message_type": "interface_dispute",
-  "timestamp": "2026-04-20T14:00:00Z",
-  "from_role": "spm_storage",
+  "timestamp": "2026-04-21T10:00:00Z",
+  "from_role": "spm_vm_lifecycle",
   "to_role": "sd",
-  "message_id": "IDP-SPM-STORAGE-0001",
+  "message_id": "IDP-SPM-VM-LIFECYCLE-0001",
   "status": "unread",
-  "initiating_spm_id": "spm_storage",
-  "co_author_spm_id": "spm_networking",
-  "interface_name": "StorageNetworkBridge",
-  "dispute_subject": "Error propagation direction when storage unreachable over network",
-  "spm_storage_position": "Storage should return a retry-after hint to networking and let networking handle timeout.",
-  "spm_networking_position": "Storage should fail immediately; networking does not own storage timeouts.",
-  "attempted_resolution": "One cycle of direct exchange. No agreement.",
-  "blocks_tasks": ["TSK-0063"],
-  "requires_resolution_by": "2026-04-22T12:00:00Z"
+  "other_party": "spm_storage",
+  "contested_interface": "vm_snapshot_manifest_v1.1 section 4",
+  "dispute": "Storage insists the checksum field is optional. We insist it is required. The spec is ambiguous.",
+  "our_position": "Checksum must be required. Without it the restore verification step cannot be guaranteed.",
+  "other_party_position": "Checksum should be optional to support lightweight snapshots for development environments.",
+  "blocking_tasks": ["TSK-0044", "TSK-0051"]
 }
 ```
 
 ---
 
-## `BRS` — binding_resolution
+### `BRS` — binding_resolution
 
-**What it does:** SD's final, binding ruling on an interface dispute. Not negotiable.
+**What it does:** SD resolves an interface dispute. This is binding. Both parties must implement accordingly.
 
-**Who sends it:** `sd` → both disputing SPMs
-
-**Example:**
+**Who sends it:** `sd` → both SPM parties
 
 ```json
 {
   "schema_version": "1.0",
   "message_type": "binding_resolution",
-  "timestamp": "2026-04-20T16:00:00Z",
+  "timestamp": "2026-04-21T14:00:00Z",
   "from_role": "sd",
-  "to_role": "spm_storage",
-  "also_notified": ["spm_networking", "ppm"],
-  "message_id": "BRS-SD-0001",
+  "to_role": "spm_vm_lifecycle",
+  "also_notified": ["spm_storage"],
+  "message_id": "BRS-SD-0002",
   "status": "unread",
-  "in_response_to": "IDP-SPM-STORAGE-0001",
-  "interface_name": "StorageNetworkBridge",
-  "resolution": "Storage fails immediately with specific error code STORAGE_UNREACHABLE. Networking interprets the code and handles retry policy. Retry-after hints are advisory only.",
-  "rationale": "Separation of concerns: storage owns storage state, networking owns retry policy. Cross-contamination breaks the subsystem boundary defined in spec v1.1.",
-  "spec_reference": "storage_subsystem_v1.2 section 4.1",
-  "effective_immediately": true,
-  "cag_supersede_required": true
+  "in_response_to": "IDP-SPM-VM-LIFECYCLE-0001",
+  "resolution": "Checksum is required in production snapshots. Optional flag checksum_skip: bool defaults to false and may only be set true when snapshot_mode is development. Both subsystems implement accordingly.",
+  "rationale": "Production restore integrity is non-negotiable. Development speed is a valid secondary concern. The flag separates the two.",
+  "spec_update_required": true,
+  "spec_section": "vm_snapshot_manifest_v1.1 section 4"
 }
 ```
 
@@ -385,15 +354,15 @@ The trigger mechanism, plus the first tools for handling disagreements.
 
 ## v1.2 — Task management
 
-How PPM coordinates the daily flow of work.
+The machinery that turns a project plan into actual work assignments and status reporting.
 
-## `TAS` — task_assignment
+---
 
-**What it does:** PPM hands a task to an SPM. Acceptance criteria are mandatory.
+### `TAS` — task_assignment
+
+**What it does:** PPM assigns a task to an SPM with full context for execution.
 
 **Who sends it:** `ppm` → `spm`
-
-**Example:**
 
 ```json
 {
@@ -402,301 +371,266 @@ How PPM coordinates the daily flow of work.
   "timestamp": "2026-04-20T09:30:00Z",
   "from_role": "ppm",
   "to_role": "spm_vm_lifecycle",
-  "message_id": "TAS-PPM-0044",
+  "message_id": "TAS-PPM-0041",
   "status": "unread",
   "task_id": "TSK-0067",
-  "title": "Implement VM graceful shutdown via libvirt domain API",
-  "description": "Current shutdown is forced. Need ACPI-based graceful shutdown with fallback to force after 30s timeout.",
-  "spec_reference": "vm_lifecycle_v1.3 section 2.4",
+  "milestone_id": "M1",
+  "title": "Implement VM graceful shutdown with 30-second ACPI timeout",
+  "description": "VM must attempt ACPI shutdown. If not complete within 30 seconds, force destroy. Return final domain state and elapsed time.",
   "acceptance_criteria": [
-    "VM receives ACPI shutdown signal via virDomainShutdown",
-    "Timeout is configurable, defaults to 30s",
-    "Force shutdown occurs if graceful times out",
-    "Unit tests cover both graceful and timeout paths"
+    "VM transitions to shutoff state within 30s on ACPI success",
+    "VM is force-destroyed if ACPI shutdown exceeds 30s timeout",
+    "Function returns: final_state (enum), elapsed_ms (u64)",
+    "All error paths return typed errors from the VM_ error namespace"
   ],
-  "priority": "high",
+  "spec_reference": "vm_lifecycle_v1.3 section 2.4",
   "dependencies": ["TSK-0061"],
-  "target_completion": "2026-04-22"
+  "deadline": "2026-04-25T17:00:00Z"
 }
 ```
 
 ---
 
-## `SRP` — status_report
+### `SRP` — status_report
 
-**What it does:** Any internal role reports its current state to PPM each cycle.
+**What it does:** Any internal role reports its current status to PPM, or upward in hierarchy on request.
 
-**Who sends it:** Any internal role → `ppm`
-
-**Example:**
+**Who sends it:** Any internal role → `ppm` (or hierarchy)
 
 ```json
 {
   "schema_version": "1.0",
   "message_type": "status_report",
   "timestamp": "2026-04-20T17:00:00Z",
-  "from_role": "spm_vm_lifecycle",
+  "from_role": "spm_storage",
   "to_role": "ppm",
-  "message_id": "SRP-SPM-VM-LIFECYCLE-0023",
+  "message_id": "SRP-SPM-STORAGE-0022",
   "status": "unread",
-  "report_date": "2026-04-20",
-  "overall_status": "green",
-  "summary": "Three tasks in progress, one awaiting CR review.",
-  "active_tasks": [
-    {"task_id": "TSK-0067", "status": "in_progress", "coder": "coder_vm_01"},
-    {"task_id": "TSK-0068", "status": "in_progress", "coder": "coder_vm_02"}
+  "period": "2026-04-20",
+  "overall_status": "amber",
+  "tasks_in_progress": 3,
+  "tasks_blocked": 1,
+  "tasks_completed_this_cycle": 2,
+  "blockers": [
+    {
+      "task_id": "TSK-0044",
+      "reason": "Awaiting pool provisioning from INFRA. ESC-SPM-STORAGE-0003 open."
+    }
   ],
-  "blocked_tasks": [],
-  "coder_queue_depth": 2,
-  "tool_requests_pending": 0,
-  "issues": []
+  "risks": "If pool is not provisioned by end of tomorrow, M1 delivery is at risk."
 }
 ```
 
 ---
 
-## `TCM` — task_completion
+### `TCM` — task_completion
 
-**What it does:** SPM declares a task done. Requires three non-empty sign-off IDs.
+**What it does:** SPM notifies PPM that a task is complete. Must include sign-off IDs.
 
 **Who sends it:** `spm` → `ppm`
 
-**Example:**
+The `cr_signoff_id` and `qa_signoff_id` fields here are not optional formalities. They are the proof that the task passed its gates. A task_completion without them is a claim without evidence.
 
 ```json
 {
   "schema_version": "1.0",
   "message_type": "task_completion",
-  "timestamp": "2026-04-20T16:45:00Z",
+  "timestamp": "2026-04-22T15:00:00Z",
   "from_role": "spm_vm_lifecycle",
   "to_role": "ppm",
-  "message_id": "TCM-SPM-VM-LIFECYCLE-0009",
+  "message_id": "TCM-SPM-VM-LIFECYCLE-0014",
   "status": "unread",
   "task_id": "TSK-0067",
-  "cr_sign_off_id": "RRS-CR-0022",
-  "qa_sign_off_id": "NTF-QA-0015",
-  "doc_sign_off_id": "NTF-DOC-0008",
-  "completion_notes": "Graceful shutdown implemented and tested. 30s timeout default, configurable via config.toml."
+  "milestone_id": "M1",
+  "summary": "VM graceful shutdown implemented. ACPI path and force-destroy timeout both tested.",
+  "deliverable_path": "src/vm_lifecycle/shutdown.rs",
+  "cr_signoff_id": "RRS-CR-0022",
+  "qa_signoff_id": "QAP-QA-0008",
+  "doc_delivered": true,
+  "doc_path": "docs/vm_lifecycle/shutdown.md"
 }
 ```
 
 ---
 
-## `CSD` — coder_scale_decision
+### `SRQ` — status_report_request
 
-**What it does:** PPM logs a scale-up or scale-down of the coder pool. This is a log record, not an inbox message.
-
-**Who sends it:** `ppm` (log record) + NTF to PM
-
-**Example:**
-
-```json
-{
-  "schema_version": "1.0",
-  "message_type": "coder_scale_decision",
-  "timestamp": "2026-04-20T17:15:00Z",
-  "decision_id": "CSD-PPM-0004",
-  "direction": "scale_up",
-  "trigger": "2 SPMs reported coder_queue_depth > 3",
-  "affected_subsystems": ["spm_storage", "spm_networking"],
-  "coders_added": 2,
-  "new_total_coders": 8,
-  "consecutive_cycles_at_threshold": 0,
-  "notification_message_id": "NTF-PPM-0091"
-}
-```
-
----
-
-## `SRQ` — status_report_request
-
-**What it does:** PPM triggers the cycle by asking a role for a status report by a deadline.
+**What it does:** PPM requests a status report from a specific role.
 
 **Who sends it:** `ppm` → any internal role
-
-**Example:**
 
 ```json
 {
   "schema_version": "1.0",
   "message_type": "status_report_request",
-  "timestamp": "2026-04-20T08:00:00Z",
+  "timestamp": "2026-04-20T16:00:00Z",
   "from_role": "ppm",
-  "to_role": "spm_vm_lifecycle",
-  "message_id": "SRQ-PPM-0112",
+  "to_role": "spm_networking",
+  "message_id": "SRQ-PPM-0031",
   "status": "unread",
-  "report_for_date": "2026-04-20",
-  "report_due_by": "2026-04-20T17:00:00Z",
-  "fields_required": [
-    "overall_status",
-    "active_tasks",
-    "blocked_tasks",
-    "coder_queue_depth",
-    "issues"
-  ]
+  "reason": "Consolidated report due in 60 minutes. Networking status outstanding.",
+  "required_by": "2026-04-20T17:00:00Z"
 }
 ```
 
 ---
 
-## `DCF` — dependency_conflict
+## v1.3 — Design and spec flow
 
-**What it does:** PPM logs a dependency conflict. Resolved internally if possible, otherwise escalated.
-
-**Who sends it:** `ppm` (log record)
-
-**Example:**
-
-```json
-{
-  "schema_version": "1.0",
-  "message_type": "dependency_conflict",
-  "timestamp": "2026-04-20T14:10:00Z",
-  "conflict_id": "DCF-PPM-0003",
-  "task_a": "TSK-0063",
-  "task_b": "TSK-0071",
-  "nature": "Both require write access to libvirt connection singleton",
-  "resolution": "Sequenced TSK-0063 to run first. Logged and proceeding.",
-  "escalation_required": false,
-  "escalation_message_id": ""
-}
-```
+The path from Marko's analysis through SD's architecture to a released specification.
 
 ---
 
-## v1.3 — Design and reflection
+### `DRF` — design_reflection
 
-How SD interacts with Marko and releases specifications.
+**What it does:** SD produces a reflection document after completing a design. Marko reviews and signs off before any spec leaves the role.
 
-## `DRF` — design_reflection
+**Who sends it:** `sd` → `pm` (forwarded to Marko)
 
-**What it does:** SD restates Marko's analysis in its own words and asks him to confirm the understanding. Enforces Checkpoint 1.
-
-**Who sends it:** `sd` → `pm` → `client` (Marko)
-
-**Example:**
+No spec is released without this. It is checkpoint 1 and it is a hard stop.
 
 ```json
 {
   "schema_version": "1.0",
   "message_type": "design_reflection",
-  "timestamp": "2026-04-20T10:00:00Z",
+  "timestamp": "2026-04-19T16:00:00Z",
   "from_role": "sd",
   "to_role": "pm",
-  "message_id": "DRF-SD-0008",
+  "message_id": "DRF-SD-0005",
   "status": "unread",
-  "subsystem": "networking",
-  "original_analysis_reference": "REQ-CLIENT-0041",
-  "reflection": "The networking subsystem must route all VM traffic through a virtual bridge. No direct host-to-VM connection. Isolation between VMs is mandatory by default and can only be relaxed per-pair via explicit ACL. Marko specifically excluded NAT from scope; bridge mode only.",
-  "explicit_exclusions_noted": ["NAT", "direct host connection"],
-  "open_questions": [
-    "Should the bridge name be derivable from VM name, or configured?"
+  "spec_name": "storage_subsystem_v1.1",
+  "summary": "Defined storage pool lifecycle, snapshot manifest format, and CoW layer interface. Three interface contracts specified.",
+  "decisions_made": [
+    "Snapshot manifest uses SHA-256 checksums for production, optional for development mode",
+    "CoW layers are immutable after creation — no in-place modification"
   ],
-  "signoff_requested": true
+  "assumptions": [
+    "Libvirt storage pool API is available on all target systems",
+    "Available disk space validated before snapshot creation"
+  ],
+  "open_questions": [],
+  "risks": "None identified at this stage."
 }
 ```
 
 ---
 
-## `SPR` — spec_release
+### `RSO` — reflection_signoff
 
-**What it does:** SD releases a specification to PPM for task decomposition. reflection_signoff_id is mandatory.
+**What it does:** PM signals Marko's approval of the design reflection. SD may now release the spec.
 
-**Who sends it:** `sd` → `ppm`, `spm`, `sec`, `doc`
-
-**Example:**
-
-```json
-{
-  "schema_version": "1.0",
-  "message_type": "spec_release",
-  "timestamp": "2026-04-20T13:00:00Z",
-  "from_role": "sd",
-  "to_role": "ppm",
-  "also_notified": ["spm_networking", "sec", "doc"],
-  "message_id": "SPR-SD-0013",
-  "status": "unread",
-  "subsystem": "networking",
-  "spec_version": "1.0",
-  "spec_path": "docs/specs/networking_subsystem_v1.0.md",
-  "reflection_signoff_id": "RSO-PM-0008",
-  "summary": "Networking subsystem. Bridge-mode only. Default isolation with per-pair ACL relaxation.",
-  "interfaces_defined": ["NetworkBridge", "ACLManager", "StorageNetworkBridge"],
-  "data_exchanges": [
-    {"from": "vm_lifecycle", "to": "networking", "payload": "bridge_assignment_request"}
-  ],
-  "breaking_changes": false
-}
-```
-
----
-
-## `DDC` — design_decision
-
-**What it does:** SD records a significant design decision to its state and appends to the spec document. Log record, not an inbox message.
-
-**Who sends it:** `sd` (log record)
-
-**Example:**
-
-```json
-{
-  "schema_version": "1.0",
-  "message_type": "design_decision",
-  "timestamp": "2026-04-20T11:30:00Z",
-  "decision_id": "DDC-SD-0017",
-  "subsystem": "networking",
-  "subject": "Bridge name derivation",
-  "decision": "Bridge name is configured explicitly, not derived from VM name.",
-  "rationale": "Derivation couples network config to VM naming. VMs rename over time; bridges rarely do. Explicit config survives renames.",
-  "alternatives_considered": [
-    "Derive from VM name (rejected: rename coupling)",
-    "Random UUID (rejected: not human-readable)"
-  ],
-  "spec_section": "networking_v1.0 section 3.1"
-}
-```
-
----
-
-## `RSO` — reflection_signoff
-
-**What it does:** PM writes this on Marko's behalf after consulting him. Unlocks SD to proceed with spec release.
-
-**Who sends it:** `pm` (on client's behalf) → `sd`
-
-**Example:**
+**Who sends it:** `pm` → `sd` (on Marko's behalf)
 
 ```json
 {
   "schema_version": "1.0",
   "message_type": "reflection_signoff",
-  "timestamp": "2026-04-20T12:30:00Z",
+  "timestamp": "2026-04-19T17:30:00Z",
   "from_role": "pm",
   "to_role": "sd",
-  "message_id": "RSO-PM-0008",
+  "message_id": "RSO-PM-0005",
   "status": "unread",
-  "in_response_to": "DRF-SD-0008",
-  "signoff_status": "approved_with_corrections",
-  "client_corrections": "Bridge name should be configured, not derived. Marko confirmed this explicitly.",
-  "signoff_authority": "pm on behalf of Marko Tahvanainen",
-  "signoff_timestamp": "2026-04-20T12:28:00Z"
+  "in_response_to": "DRF-SD-0005",
+  "approved": true,
+  "notes": "Marko confirmed the checksum decision is correct. Proceed to spec release."
 }
 ```
 
 ---
 
-## v1.5 — Execution layer
+### `SPR` — spec_release
 
-How SPM coordinates coders, tools, and reviews.
+**What it does:** SD releases a specification. Triggers task decomposition by PPM and implementation by SPMs.
 
-## `CAG` — coder_assignment
+**Who sends it:** `sd` → `ppm`, `spm`, `sec`, `doc`
 
-**What it does:** SPM gives a coder a specific build task with technical detail beyond the PPM description.
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "spec_release",
+  "timestamp": "2026-04-19T18:00:00Z",
+  "from_role": "sd",
+  "to_role": "ppm",
+  "also_notified": ["spm_storage", "sec", "doc"],
+  "message_id": "SPR-SD-0012",
+  "status": "unread",
+  "spec_name": "storage_subsystem_v1.1",
+  "spec_version": "1.1",
+  "spec_path": "specs/storage_subsystem_v1.1.md",
+  "supersedes": "storage_subsystem_v1.0",
+  "summary": "Adds snapshot manifest format, CoW interface contract, and backup storage pool spec.",
+  "reflection_signoff_id": "RSO-PM-0005"
+}
+```
 
-**Who sends it:** `spm` → `coder`
+---
 
-**Example:**
+### `SRR` — spec_correction_response
+
+**What it does:** SD responds to a spec_correction_request from QA or SEC.
+
+**Who sends it:** `sd` → `qa` or `sec`
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "spec_correction_response",
+  "timestamp": "2026-04-21T11:00:00Z",
+  "from_role": "sd",
+  "to_role": "qa",
+  "message_id": "SRR-SD-0004",
+  "status": "unread",
+  "in_response_to": "SCR-QA-0007",
+  "resolution": "accepted",
+  "change_made": "Section 3.2 updated: checksum_algorithm field added as required string enum (sha256 | blake3, default sha256).",
+  "new_spec_version": "1.2",
+  "spec_path": "specs/storage_subsystem_v1.2.md"
+}
+```
+
+---
+
+### `DDC` — design_decision
+
+**What it does:** SD logs a significant design decision in its own state. Not a message sent to others — a record kept internally.
+
+**Who sends it:** `sd` — internal log record in `sd_state.json`
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "design_decision",
+  "timestamp": "2026-04-19T15:00:00Z",
+  "from_role": "sd",
+  "to_role": "sd",
+  "message_id": "DDC-SD-0011",
+  "status": "done",
+  "decision": "CoW layers are immutable after creation",
+  "rationale": "Mutable layers create race conditions in concurrent restore scenarios. Immutability simplifies the correctness proof and aligns with the patent-pending mechanism.",
+  "alternatives_considered": ["Append-only mutation log", "Copy-on-write with versioned heads"],
+  "spec_section": "storage_subsystem_v1.1 section 5"
+}
+```
+
+---
+
+## v1.4 — Spec correction response
+
+Already covered above under `SRR`.
+
+---
+
+## v1.5 — Subsystem execution
+
+The pipeline from task assignment to coder output.
+
+---
+
+### `CAG` — coder_assignment
+
+**What it does:** SPM assigns a specific coding task to a coder instance.
+
+**Who sends it:** `spm` → `coder_{n}`
 
 ```json
 {
@@ -705,41 +639,76 @@ How SPM coordinates coders, tools, and reviews.
   "timestamp": "2026-04-20T10:00:00Z",
   "from_role": "spm_vm_lifecycle",
   "to_role": "coder_vm_01",
-  "message_id": "CAG-SPM-VM-LIFECYCLE-0029",
+  "message_id": "CAG-SPM-VM-LIFECYCLE-0031",
   "status": "unread",
   "task_id": "TSK-0067",
-  "title": "Graceful VM shutdown",
-  "technical_detail": "Use virDomainShutdown with VIR_DOMAIN_SHUTDOWN_ACPI_POWER_BTN flag. Poll every 500ms for state change. On timeout (configurable, default 30s), fall back to virDomainDestroy.",
-  "interface_contracts": ["vm_lifecycle_v1.3 section 2.4"],
-  "tools_available": ["libvirt_rust_wrapper v0.3.1"],
-  "supersedes": "",
-  "design_language_reminder": "Error codes must follow VM_* prefix convention."
+  "title": "Implement VM graceful shutdown with 30-second ACPI timeout",
+  "spec_reference": "vm_lifecycle_v1.3 section 2.4",
+  "acceptance_criteria": [
+    "VM transitions to shutoff state within 30s on ACPI success",
+    "VM is force-destroyed if ACPI shutdown exceeds 30s",
+    "Returns: final_state (enum), elapsed_ms (u64)",
+    "All errors use VM_ error namespace"
+  ],
+  "tools_available": ["libvirt_state_poller v0.2.0"],
+  "deadline": "2026-04-24T17:00:00Z"
 }
 ```
 
 ---
 
-## `TRQ` — tool_request
+### `CPK` — code_package
 
-**What it does:** SPM asks TM for a tool that does not yet exist. The task waits until the tool arrives.
+**What it does:** Coder submits finished code to SPM. Must include passing test results.
 
-**Who sends it:** `spm` → `tm`
+**Who sends it:** `coder` → `spm`
 
-**Example:**
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "code_package",
+  "timestamp": "2026-04-20T15:00:00Z",
+  "from_role": "coder_vm_01",
+  "to_role": "spm_vm_lifecycle",
+  "message_id": "CPK-CODER-VM-01-0031",
+  "status": "unread",
+  "task_id": "TSK-0067",
+  "code_path": "src/vm_lifecycle/shutdown.rs",
+  "test_results": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "coverage_percent": 87
+  },
+  "design_language_compliance_notes": "All error codes use VM_ prefix. No deviations.",
+  "dependencies_used": ["libvirt_rust_wrapper v0.3.1", "libvirt_state_poller v0.2.0"],
+  "build_command": "cargo build --release"
+}
+```
+
+---
+
+### `TRQ` — tool_request
+
+**What it does:** SPM (or TEST) requests a tool from TM or MTM. If `route_to_mtm` is true, MTM handles it.
+
+**Who sends it:** `spm` → `tm` (or `mtm`). `test` → `mtm`.
 
 ```json
 {
   "schema_version": "1.0",
   "message_type": "tool_request",
-  "timestamp": "2026-04-20T09:45:00Z",
+  "timestamp": "2026-04-20T09:00:00Z",
   "from_role": "spm_vm_lifecycle",
   "to_role": "tm_vm_lifecycle",
   "message_id": "TRQ-SPM-VM-LIFECYCLE-0011",
   "status": "unread",
-  "tool_name": "libvirt_state_poller",
-  "purpose": "Poll virDomainGetState at configurable interval with timeout. Needed by TSK-0067 and TSK-0068.",
-  "inputs": "domain_handle, poll_interval_ms, timeout_ms",
-  "outputs": "final_state, elapsed_ms",
+  "task_id": "TSK-0067",
+  "tool_description": "Poll Libvirt domain state at a configurable interval with a timeout. Return final state and elapsed time.",
+  "inputs": "domain_handle, poll_interval_ms (u64), timeout_ms (u64)",
+  "outputs": "Result<(DomainState, u64), VmError>",
+  "deadline": "2026-04-23T17:00:00Z",
+  "route_to_mtm": false,
   "cross_subsystem_candidate": true,
   "blocks_tasks": ["TSK-0067", "TSK-0068"],
   "priority": "high"
@@ -748,13 +717,13 @@ How SPM coordinates coders, tools, and reviews.
 
 ---
 
-## `RRQ` — review_request
+### `RRQ` — review_request
 
-**What it does:** SPM asks CR to review code. self_review_notes are mandatory.
+**What it does:** SPM sends a code package to CR for design language and contract review.
 
 **Who sends it:** `spm` → `cr`
 
-**Example:**
+`self_review_notes` are mandatory. An SPM that cannot describe what they already checked is sending something they have not reviewed themselves.
 
 ```json
 {
@@ -768,7 +737,7 @@ How SPM coordinates coders, tools, and reviews.
   "task_id": "TSK-0067",
   "code_package_id": "CPK-CODER-VM-01-0031",
   "code_path": "src/vm_lifecycle/shutdown.rs",
-  "self_review_notes": "Reviewed the 30s timeout path carefully. Tests cover both ACPI success and timeout fallback. One concern: the poll interval is not unit-tested for the 0ms edge case. Ignored this as the config validator rejects 0ms.",
+  "self_review_notes": "Reviewed the 30s timeout path carefully. Tests cover both ACPI success and timeout fallback. One concern: the poll interval is not unit-tested for the 0ms edge case — the config validator rejects 0ms upstream so this was deemed safe.",
   "interface_contracts_verified": ["vm_lifecycle_v1.3 section 2.4"],
   "design_language_compliance_confirmed": true
 }
@@ -776,13 +745,11 @@ How SPM coordinates coders, tools, and reviews.
 
 ---
 
-## `RRS` — review_result
+### `RRS` — review_result
 
-**What it does:** CR returns a review decision. Approved IDs become the cr_sign_off_id in task_completion.
+**What it does:** CR returns a review decision to SPM. The `message_id` of an approved RRS becomes the `cr_signoff_id` referenced downstream.
 
 **Who sends it:** `cr` → `spm`
-
-**Example:**
 
 ```json
 {
@@ -811,48 +778,15 @@ How SPM coordinates coders, tools, and reviews.
 
 ---
 
-## `CPK` — code_package
-
-**What it does:** Coder submits finished code to SPM. Must include passing test results.
-
-**Who sends it:** `coder` → `spm`
-
-**Example:**
-
-```json
-{
-  "schema_version": "1.0",
-  "message_type": "code_package",
-  "timestamp": "2026-04-20T15:00:00Z",
-  "from_role": "coder_vm_01",
-  "to_role": "spm_vm_lifecycle",
-  "message_id": "CPK-CODER-VM-01-0031",
-  "status": "unread",
-  "task_id": "TSK-0067",
-  "code_path": "src/vm_lifecycle/shutdown.rs",
-  "test_results": {
-    "total": 12,
-    "passed": 12,
-    "failed": 0,
-    "coverage_percent": 87
-  },
-  "design_language_compliance_notes": "All error codes use VM_ prefix. No deviations.",
-  "dependencies_used": ["libvirt_rust_wrapper v0.3.1", "libvirt_state_poller v0.1.0"],
-  "build_command": "cargo build --release"
-}
-```
+## v1.6 — Tool delivery and coverage
 
 ---
 
-## v1.6 — Tool delivery and coverage
+### `TDL` — tool_delivery
 
-## `TDL` — tool_delivery
+**What it does:** TM or MTM delivers a finished tool. Unblocks the tasks that were waiting.
 
-**What it does:** TM (or MTM) delivers a finished tool to SPM. Unblocks tasks that were waiting.
-
-**Who sends it:** `tm` or `mtm` → `spm`
-
-**Example:**
+**Who sends it:** `tm` or `mtm` → `spm` (or `cr`, `test`)
 
 ```json
 {
@@ -868,10 +802,9 @@ How SPM coordinates coders, tools, and reviews.
   "tool_path": "tools/vm_lifecycle/libvirt_state_poller/",
   "tool_version": "0.1.0",
   "description": "Polls virDomainGetState at configurable interval with timeout. Returns final state and elapsed time.",
-  "usage": "from libvirt_state_poller import poll_state; result = poll_state(domain, interval_ms=500, timeout_ms=30000)",
   "inputs": "domain_handle, poll_interval_ms, timeout_ms",
   "outputs": "final_state, elapsed_ms",
-  "test_coverage": "92 percent, covers happy path and timeout",
+  "test_coverage": "92 percent. Covers happy path and timeout.",
   "doc_path": "tools/vm_lifecycle/libvirt_state_poller/README.md",
   "unblocks_tasks": ["TSK-0067", "TSK-0068"]
 }
@@ -879,13 +812,11 @@ How SPM coordinates coders, tools, and reviews.
 
 ---
 
-## `CVN` — coverage_notice
+### `CVN` — coverage_notice
 
-**What it does:** MTM notifies a TM that it is entering or exiting coverage mode for that subsystem.
+**What it does:** MTM notifies a TM that it is entering or exiting coverage mode for that subsystem. Permitted as direct MTM→TM communication.
 
 **Who sends it:** `mtm` → `tm`
-
-**Example:**
 
 ```json
 {
@@ -909,13 +840,13 @@ How SPM coordinates coders, tools, and reviews.
 
 ## v1.7 — Tool updates
 
-## `TUP` — tool_update
+---
 
-**What it does:** TM pushes an update to an existing tool. Separate type code so it never collides with initial delivery.
+### `TUP` — tool_update
+
+**What it does:** TM pushes an update to an existing tool. Separate type code so it is never confused with initial delivery.
 
 **Who sends it:** `tm` → `spm`
-
-**Example:**
 
 ```json
 {
@@ -940,13 +871,13 @@ How SPM coordinates coders, tools, and reviews.
 
 ## v1.8 — Shared tooling layer
 
-## `STN` — shared_tool_notice
+---
 
-**What it does:** MTM announces a new shared tool is available. Any local tools it supersedes must be deprecated.
+### `STN` — shared_tool_notice
+
+**What it does:** MTM announces a new shared tool in the `common` crate. Any local tools it supersedes must be deprecated. Permitted as direct MTM→TM communication.
 
 **Who sends it:** `mtm` → all consumers
-
-**Example:**
 
 ```json
 {
@@ -959,29 +890,24 @@ How SPM coordinates coders, tools, and reviews.
   "message_id": "STN-MTM-0005",
   "status": "unread",
   "tool_name": "libvirt_state_poller",
-  "tool_path": "tools/shared/libvirt_state_poller/",
+  "crate": "common",
+  "tool_path": "common/src/libvirt_state_poller/",
   "tool_version": "1.0.0",
-  "description": "Polls libvirt domain state with configurable interval and timeout. Works across all subsystems.",
-  "usage": "from shared.libvirt_state_poller import poll_state",
-  "inputs": "domain_handle, poll_interval_ms, timeout_ms, optional callback",
-  "outputs": "final_state, elapsed_ms",
-  "test_coverage": "95 percent. All subsystem integration paths tested.",
-  "doc_path": "tools/shared/libvirt_state_poller/README.md",
+  "description": "Polls libvirt domain state with configurable interval and timeout. Available to all subsystems.",
+  "usage": "use common::libvirt_state_poller::poll_state;",
   "absorbed_from": "tm_vm_lifecycle",
-  "supersedes_local_tools": ["tm_vm_lifecycle"],
+  "supersedes_local_tools": ["tools/vm_lifecycle/libvirt_state_poller/"],
   "intended_consumers": ["spm_vm_lifecycle", "spm_storage", "spm_networking", "cr", "test"]
 }
 ```
 
 ---
 
-## `DPN` — deprecation_notice
+### `DPN` — deprecation_notice
 
-**What it does:** MTM announces a shared tool is being retired. Consumers must migrate by the deprecation date.
+**What it does:** MTM announces a shared tool is being retired. Consumers must migrate before the deprecation date.
 
 **Who sends it:** `mtm` → affected consumers
-
-**Example:**
 
 ```json
 {
@@ -994,25 +920,487 @@ How SPM coordinates coders, tools, and reviews.
   "message_id": "DPN-MTM-0001",
   "status": "unread",
   "tool_name": "libvirt_state_poller",
-  "tool_version": "1.0.0",
+  "current_version": "1.0.0",
   "deprecation_date": "2026-06-01",
   "reason": "Superseded by libvirt_state_observer v2.0.0 which adds event-stream subscription without polling overhead.",
   "replacement_tool": "libvirt_state_observer",
-  "replacement_path": "tools/shared/libvirt_state_observer/",
-  "migration_notes": "Call sites using poll_state(domain, 500, 30000) become observe_state(domain, timeout_ms=30000). Callback is now mandatory.",
-  "breaking_changes": true,
-  "affected_roles": ["spm_vm_lifecycle", "spm_storage", "cr"]
+  "replacement_path": "common/src/libvirt_state_observer/",
+  "migration_notes": "poll_state(domain, 500, 30000) becomes observe_state(domain, timeout_ms=30000). Callback is now mandatory.",
+  "breaking_changes": true
 }
 ```
 
 ---
 
-## Notes on the examples
+## v2.0 — Quality approval
 
-Values used here are illustrative. Task IDs, message IDs, and timestamps are realistic but invented. Copy the structure, replace the values.
+The gate. CR signs off on correctness. QA signs off on whether the thing does what the spec says. These are different questions asked by different roles. `cr_signoff_id` is mandatory in `qa_approval`. QA does not open a review that CR has not already closed.
 
-Three things to remember when adapting:
+---
 
-1. **Increment the sequence counter** in your state file after every send. Never reuse IDs.
-2. **Write the notification** to the recipient's inbox after every outbox write. Without it the message is invisible.
-3. **Set `status: unread`** on outgoing messages. The recipient changes it to `pending` when acted upon, `done` when resolved.
+### `QAP` — qa_approval
+
+**What it does:** QA approves a code package after verifying it against the specification.
+
+**Who sends it:** `qa` → `spm`
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "qa_approval",
+  "timestamp": "2026-04-22T14:30:00Z",
+  "from_role": "qa",
+  "to_role": "spm_vm_lifecycle",
+  "message_id": "QAP-QA-0008",
+  "status": "unread",
+  "task_id": "TSK-0067",
+  "code_package_id": "CPK-CODER-VM-01-0031",
+  "cr_signoff_id": "RRS-CR-0022",
+  "spec_version_reviewed": "vm_lifecycle_v1.3",
+  "subsystem_id": "vm_lifecycle",
+  "verdict": "approved",
+  "conditions": [],
+  "findings": [],
+  "reviewed_at": "2026-04-22T14:30:00Z"
+}
+```
+
+---
+
+## v2.4 — Security and MTM tool gate
+
+Two things became formal this version: SEC's communication with the rest of the organisation, and the mechanism that stops the same tool from being built twice.
+
+---
+
+### `SST` — security_standards
+
+**What it does:** SEC publishes the current security standards to all relevant roles at session start.
+
+**Who sends it:** `sec` → `sd`, `ppm`, `spm_{all}`, `cr`
+
+These go out at the start of a session. They are not a request. They are the baseline that everyone else operates within.
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "security_standards",
+  "timestamp": "2026-05-01T09:00:00Z",
+  "from_role": "sec",
+  "to_role": "sd",
+  "also_notified": ["ppm", "spm_vm_lifecycle", "spm_storage", "spm_networking", "cr"],
+  "message_id": "SST-SEC-0004",
+  "status": "unread",
+  "standards_version": "1.2",
+  "standards_path": "docs/security/standards_v1.2.md",
+  "summary": "No secrets in source. Input validation on all Libvirt domain parameters. Privilege separation enforced between management and execution paths.",
+  "changes_since_last": [
+    "Added: domain parameter sanitisation required before all virDomain API calls"
+  ]
+}
+```
+
+---
+
+### `SSO` — security_signoff
+
+**What it does:** SEC issues a security sign-off to PM and CMVC at the release gate. Nothing ships without this on file.
+
+**Who sends it:** `sec` → `pm` and `cmvc`
+
+This is the mechanism behind absolute rule 2. The rule existed before the type was defined. Now both exist.
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "security_signoff",
+  "timestamp": "2026-05-15T16:00:00Z",
+  "from_role": "sec",
+  "to_role": "pm",
+  "also_notified": ["cmvc"],
+  "message_id": "SSO-SEC-0001",
+  "status": "unread",
+  "release_candidate": "v0.1.0-rc1",
+  "scope_reviewed": ["vm_lifecycle", "storage", "networking"],
+  "verdict": "approved",
+  "open_findings": [],
+  "conditions": [],
+  "signed_at": "2026-05-15T16:00:00Z"
+}
+```
+
+---
+
+### `TMS` — tool_submission
+
+**What it does:** TM submits a tool to MTM for gate approval before it can be checked in.
+
+**Who sends it:** `tm` → `mtm`
+
+Nothing gets into any crate without TAP from MTM. Incomplete documentation is automatic rejection. This is not a review. It is a gate.
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "tool_submission",
+  "timestamp": "2026-04-23T11:00:00Z",
+  "from_role": "tm_vm_lifecycle",
+  "to_role": "mtm",
+  "message_id": "TMS-TM-VM-LIFECYCLE-0003",
+  "status": "unread",
+  "tool_name": "vm_domain_validator",
+  "tool_path": "tools/vm_lifecycle/vm_domain_validator/",
+  "tool_version": "0.1.0",
+  "description": "Validates virDomain handle is non-null and domain is in an expected state before API calls. Returns typed error on invalid state.",
+  "inputs": "domain_handle: *mut virDomain, expected_states: &[DomainState]",
+  "outputs": "Result<(), VmError>",
+  "test_coverage": "96 percent",
+  "doc_path": "tools/vm_lifecycle/vm_domain_validator/README.md",
+  "cross_subsystem_candidate": true,
+  "potentially_destructive": false,
+  "in_response_to_trq": "TRQ-SPM-VM-LIFECYCLE-0012"
+}
+```
+
+---
+
+### `TAP` — tool_approval
+
+**What it does:** MTM approves a tool submission. The tool may now be checked in.
+
+**Who sends it:** `mtm` → `tm`
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "tool_approval",
+  "timestamp": "2026-04-23T13:00:00Z",
+  "from_role": "mtm",
+  "to_role": "tm_vm_lifecycle",
+  "message_id": "TAP-MTM-0008",
+  "status": "unread",
+  "in_response_to": "TMS-TM-VM-LIFECYCLE-0003",
+  "tool_name": "vm_domain_validator",
+  "approved_for_crate": "common",
+  "rationale": "Cross-subsystem utility. Three subsystems have independent validator implementations. Absorbed into common.",
+  "final_path": "common/src/vm_domain_validator/",
+  "notes": "Rename to domain_validator to match common crate naming convention."
+}
+```
+
+---
+
+### `TRJ` — tool_rejection
+
+**What it does:** MTM rejects a tool submission with specific reasons.
+
+**Who sends it:** `mtm` → `tm`
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "tool_rejection",
+  "timestamp": "2026-04-23T13:00:00Z",
+  "from_role": "mtm",
+  "to_role": "tm_storage",
+  "message_id": "TRJ-MTM-0002",
+  "status": "unread",
+  "in_response_to": "TMS-TM-STORAGE-0001",
+  "tool_name": "snapshot_checksum_validator",
+  "reasons": [
+    "Documentation missing: README does not describe error return types",
+    "Test coverage 61 percent — minimum 80 percent required",
+    "Equivalent to vm_domain_validator in common — reuse rather than duplicate"
+  ],
+  "resubmit_allowed": true,
+  "blocking_tasks": []
+}
+```
+
+---
+
+### `TSR` — tool_sec_referral
+
+**What it does:** MTM refers a tool submission to SEC for security review when `potentially_destructive` is true or SEC criteria are met.
+
+**Who sends it:** `mtm` → `sec`
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "tool_sec_referral",
+  "timestamp": "2026-04-24T10:00:00Z",
+  "from_role": "mtm",
+  "to_role": "sec",
+  "message_id": "TSR-MTM-0001",
+  "status": "unread",
+  "tool_name": "vm_force_destroy",
+  "original_submission_id": "TMS-TM-VM-LIFECYCLE-0004",
+  "referral_reason": "Tool calls virDomainDestroy without state validation. Marked potentially_destructive by submitter.",
+  "tool_path": "tools/vm_lifecycle/vm_force_destroy/",
+  "tool_version": "0.1.0",
+  "doc_path": "tools/vm_lifecycle/vm_force_destroy/README.md",
+  "requires_response_by": "2026-04-25T17:00:00Z"
+}
+```
+
+---
+
+### `STC` — sec_tool_clearance
+
+**What it does:** SEC responds to a tool_sec_referral with clearance or rejection.
+
+**Who sends it:** `sec` → `mtm`
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "sec_tool_clearance",
+  "timestamp": "2026-04-24T15:00:00Z",
+  "from_role": "sec",
+  "to_role": "mtm",
+  "message_id": "STC-SEC-0001",
+  "status": "unread",
+  "in_response_to": "TSR-MTM-0001",
+  "tool_name": "vm_force_destroy",
+  "verdict": "cleared_with_conditions",
+  "conditions": [
+    "Caller must log the domain name and reason before invoking virDomainDestroy",
+    "Tool must not be callable from user-facing code paths — internal use only"
+  ],
+  "open_findings": []
+}
+```
+
+---
+
+## v2.5 — UX, DOC, and TEST
+
+Three new roles. Six new message types. The quality, documentation, and usability gates close.
+
+---
+
+### `UXR` — ux_spec_release
+
+**What it does:** UX releases a design specification for a user-facing surface to the UI subsystem SPM. Contains usability acceptance criteria that TEST will eventually verify.
+
+**Who sends it:** `ux` → `spm` (UI subsystem)
+
+The criteria in this message are not preferences. They are the pass/fail standard against which TEST verifies the implementation. "Looks clean" is not a criterion. "Primary action completes within two interactions from the main screen" is a criterion.
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "ux_spec_release",
+  "timestamp": "2026-05-10T14:00:00Z",
+  "from_role": "ux",
+  "to_role": "spm_ui",
+  "message_id": "UXR-UX-0001",
+  "status": "unread",
+  "surface_id": "UXS-RESTORE-0001",
+  "surface_name": "VM restore confirmation dialog",
+  "spec_version": "1.0",
+  "spec_document_path": "specs/ux/restore_dialog_v1.0.md",
+  "components": ["COMP-RESTORE-BTN-001", "COMP-STATUS-INDICATOR-001", "COMP-CONFIRM-MODAL-001"],
+  "design_tokens_version": "1.0",
+  "replaces_spec_version": "",
+  "technical_constraints_applied": [],
+  "usability_criteria": [
+    {
+      "criterion_id": "UXC-RESTORE-0001",
+      "description": "User can initiate a restore from the main screen in two interactions or fewer",
+      "test_method": "Observer counts interactions from main screen to restore initiated. Pass if count is 2 or fewer."
+    },
+    {
+      "criterion_id": "UXC-RESTORE-0002",
+      "description": "Restore button is visible without scrolling on a 1024x768 viewport",
+      "test_method": "Render at 1024x768. Verify restore button is within viewport without scrolling."
+    }
+  ]
+}
+```
+
+---
+
+### `DGF` — documentation_gap_flag
+
+**What it does:** DOC flags to QA that a task was marked complete without the required documentation. QA holds the sign-off until the flag is resolved.
+
+**Who sends it:** `doc` → `qa`
+
+A completed task with no documentation is a fact with no record. The flag does not punish. It enforces the principle that a task is not done until it can be explained to the next person who needs to work on it.
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "documentation_gap_flag",
+  "timestamp": "2026-05-10T17:00:00Z",
+  "from_role": "doc",
+  "to_role": "qa",
+  "message_id": "DGF-DOC-0002",
+  "status": "unread",
+  "task_id": "TSK-0067",
+  "owing_role": "spm_vm_lifecycle",
+  "document_type": "subsystem_doc",
+  "task_completed_at": "2026-05-10T15:30:00Z",
+  "flagged_at": "2026-05-10T17:00:00Z",
+  "flag_status": "open",
+  "resolved_at": "",
+  "resolution_note": ""
+}
+```
+
+---
+
+### `TPL` — test_plan
+
+**What it does:** TEST submits a test plan to QA for approval before execution begins. No execution without an approved plan.
+
+**Who sends it:** `test` → `qa`
+
+The plan is not a formality. It is the contract between TEST and QA about what will be tested, to what coverage target, under what conditions. QA approves the contract. TEST executes it.
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "test_plan",
+  "timestamp": "2026-05-11T10:00:00Z",
+  "from_role": "test",
+  "to_role": "qa",
+  "message_id": "TPL-TEST-0003",
+  "status": "unread",
+  "task_id": "TSK-0067",
+  "spec_reference": "vm_lifecycle_v1.3 section 2.4",
+  "coverage_target_percent": 90,
+  "test_cases": [
+    {
+      "case_id": "TC-0067-001",
+      "description": "ACPI shutdown completes within 30 seconds",
+      "preconditions": "VM in running state",
+      "steps": "Call graceful_shutdown(domain). Wait up to 30s.",
+      "expected": "Domain state: shutoff. elapsed_ms < 30000.",
+      "pass_criteria": "State is shutoff AND elapsed_ms is under 30000"
+    },
+    {
+      "case_id": "TC-0067-002",
+      "description": "Force destroy triggered when ACPI times out",
+      "preconditions": "VM in running state. ACPI response stubbed to never complete.",
+      "steps": "Call graceful_shutdown(domain). Wait 30 seconds.",
+      "expected": "Domain force-destroyed. Function returns elapsed_ms >= 30000.",
+      "pass_criteria": "Domain destroyed AND elapsed_ms >= 30000"
+    }
+  ],
+  "tooling_required": ["libvirt_state_poller v1.0.0"],
+  "estimated_duration_minutes": 20
+}
+```
+
+---
+
+### `TRS` — test_result
+
+**What it does:** TEST delivers test results after executing an approved plan.
+
+**Who sends it:** `test` → `qa` and `spm`
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "test_result",
+  "timestamp": "2026-05-11T12:30:00Z",
+  "from_role": "test",
+  "to_role": "qa",
+  "also_sent_to": ["spm_vm_lifecycle"],
+  "message_id": "TRS-TEST-0003",
+  "status": "unread",
+  "task_id": "TSK-0067",
+  "plan_id": "TPL-TEST-0003",
+  "overall_verdict": "passed",
+  "coverage_achieved_percent": 91,
+  "coverage_target_percent": 90,
+  "cases_total": 12,
+  "cases_passed": 12,
+  "cases_failed": 0,
+  "open_defects": [],
+  "notes": "All cases passed on first run. Coverage target met."
+}
+```
+
+---
+
+### `DFR` — defect_report
+
+**What it does:** TEST reports a failed test case to SPM with full reproduction steps.
+
+**Who sends it:** `test` → `spm`
+
+Reproduction steps are not optional. "It failed" is not a defect report. "Call graceful_shutdown on a domain in shutoff state. Expected: typed error VmError::InvalidState. Actual: panic." is a defect report.
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "defect_report",
+  "timestamp": "2026-05-11T11:00:00Z",
+  "from_role": "test",
+  "to_role": "spm_vm_lifecycle",
+  "message_id": "DFR-TEST-0001",
+  "status": "unread",
+  "task_id": "TSK-0067",
+  "test_case_id": "TC-0067-003",
+  "spec_section_violated": "vm_lifecycle_v1.3 section 2.4 — error handling",
+  "expected_result": "Returns VmError::InvalidState when called on a domain not in running state",
+  "actual_result": "Thread panic: unwrap() on None at shutdown.rs:83",
+  "reproduction_steps": [
+    "1. Create domain in shutoff state",
+    "2. Call graceful_shutdown(domain)",
+    "3. Observe panic"
+  ],
+  "severity": "high",
+  "environment": "cargo test --release, libvirt 9.0.0",
+  "defect_status": "open"
+}
+```
+
+---
+
+### `UFN` — usability_finding
+
+**What it does:** TEST reports a failed usability criterion to the UI/UX Designer.
+
+**Who sends it:** `test` → `ux`
+
+Usability findings go to UX, not SPM. SPM fixes code defects. UX addresses usability failures. These are different problems with different owners. Sending a usability finding to SPM produces a code change that does not solve the design problem.
+
+```json
+{
+  "schema_version": "1.0",
+  "message_type": "usability_finding",
+  "timestamp": "2026-05-12T14:00:00Z",
+  "from_role": "test",
+  "to_role": "ux",
+  "message_id": "UFN-TEST-0001",
+  "status": "unread",
+  "surface_id": "UXS-RESTORE-0001",
+  "ux_spec_version": "1.0",
+  "criterion_id": "UXC-RESTORE-0001",
+  "criterion_description": "User can initiate a restore from the main screen in two interactions or fewer",
+  "test_method_used": "Observer counts interactions from main screen to restore initiated",
+  "observed_result": "Restore requires three interactions: main menu, subsystem select, then restore button",
+  "verdict": "failed",
+  "severity": "high",
+  "notes": "The subsystem selection step is the extra interaction. Not present in the spec design.",
+  "finding_status": "open"
+}
+```
+
+---
+
+## One last note
+
+This cookbook covers all 45 message types in CLAUDE.md v2.5.
+
+When you encounter a situation that needs a message type that is not here, you do not invent one. You write a `convention_request` (CVR) to PM, describe the situation, propose a type, and wait. The PM decides. CLAUDE.md gets updated. The version number increments. This document gets a new section.
+
+The system grows through convention_requests, not through improvisation. That is the point of the system.
+
+github.com/murtsu/RostadVM
