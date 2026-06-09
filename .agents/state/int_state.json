@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "role": "int",
+  "instance": "project-global",
+  "last_updated": "",
+
+  "active_integration": {
+    "integration_id": "",
+    "started_at": "",
+    "interface_spec_version": "",
+    "interface_spec_message_id": ""
+  },
+
+  "subsystem_packages": [],
+
+  "assembly_state": {
+    "status": "waiting",
+    "assembled_subsystems": [],
+    "pending_subsystems": [],
+    "blocked_on": ""
+  },
+
+  "integration_testing": {
+    "test_request_sent": false,
+    "test_request_message_id": "",
+    "test_results_received": false,
+    "test_results_message_id": "",
+    "test_outcome": ""
+  },
+
+  "gate_status": {
+    "qa": {
+      "cleared": false,
+      "message_id": "",
+      "cleared_at": ""
+    },
+    "sec": {
+      "cleared": false,
+      "message_id": "",
+      "cleared_at": ""
+    }
+  },
+
+  "release_candidates": [],
+
+  "rejection_log": [],
+
+  "session_log": [],
+
+  "sequence_counters": {
+    "NTF": 0,
+    "SRP": 0,
+    "ESC": 0,
+    "CVR": 0
+  }
+}

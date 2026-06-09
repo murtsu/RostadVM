@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "role": "cmvc",
+  "instance": "project-global",
+  "last_updated": "",
+
+  "operational_mode": "pre_release",
+
+  "branching_standards": {
+    "document_path": "",
+    "version": "",
+    "published_at": "",
+    "published_to_roles": []
+  },
+
+  "configuration_baselines": [],
+
+  "release_history": [],
+
+  "active_release_candidate": {
+    "candidate_id": "",
+    "received_from": "int",
+    "received_at": "",
+    "int_package_message_id": "",
+    "qa_signoff": {
+      "received": false,
+      "message_id": "",
+      "received_at": ""
+    },
+    "sec_signoff": {
+      "received": false,
+      "message_id": "",
+      "received_at": ""
+    },
+    "doc_confirmation": {
+      "received": false,
+      "message_id": "",
+      "received_at": ""
+    },
+    "gate_status": "waiting",
+    "gate_notes": "",
+    "pm_decision": {
+      "received": false,
+      "message_id": "",
+      "decision": "",
+      "received_at": ""
+    }
+  },
+
+  "post_release_feedback": [],
+
+  "session_log": [],
+
+  "sequence_counters": {
+    "NTF": 0,
+    "ESC": 0,
+    "SCR": 0,
+    "SRP": 0,
+    "CVR": 0
+  }
+}

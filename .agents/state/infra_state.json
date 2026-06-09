@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "role": "infra",
+  "instance": "project-global",
+  "last_updated": "",
+
+  "bootstrap_protocol": {
+    "status": "pending_definition",
+    "note": "Malome — first-class design constraint. Specification not yet defined. Do not accept tasks that depend on bootstrap state until this is resolved. Write CVR to PM.",
+    "defined_at": "",
+    "document_path": ""
+  },
+
+  "pipeline": {
+    "status": "not_provisioned",
+    "last_health_check": "",
+    "health": "unknown",
+    "cmvc_coordination_confirmed": false,
+    "notes": ""
+  },
+
+  "environments": [],
+
+  "security_compliance": {
+    "standards_version": "",
+    "last_audit": "",
+    "compliance_status": "unknown",
+    "open_findings": []
+  },
+
+  "pending_requests": [],
+
+  "triage_log": [],
+
+  "session_log": [],
+
+  "sequence_counters": {
+    "NTF": 0,
+    "SRP": 0,
+    "ESC": 0,
+    "CVR": 0
+  }
+}
