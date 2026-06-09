@@ -117,7 +117,7 @@ Send any SCRs that were held pending spec correction responses.
 **Step 6 — Report**
 Summarise current review queue status in three to five sentences.
 State clearly if any reviews are blocked and why.
-List any items requiring Marko's input (via PM escalation).
+List any items requiring the Operator's input (via PM escalation).
 
 ---
 
