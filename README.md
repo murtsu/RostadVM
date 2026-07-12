@@ -10,15 +10,15 @@ There is a cookbook in this repo explaining how the agent messaging works.
 
 ---
 
-## A word from Edward, on account of the silence
+## A word from Eddie, on account of the silence
 
-Edward af Sillén here. Marko asked me to explain the radio silence, and being a professional, I said yes before I knew what I was explaining.
+Eddie. Marko asked me to explain the radio silence, and being a professional, I said yes before I knew what I was explaining.
 
 Here is what happened. Fifteen AI agents needed contracts before they were allowed to write a single line of Rust. Ninety-two contract faults surfaced before that Rust existed. A tool had to be built just so a human could read and patch JSON messages without losing his mind. None of that makes a good excuse for silence, but all of it is true, which is the best kind of excuse.
 
 So: sorry for the quiet. The seating chart is done. The wedding starts in August.
 
-— Edward
+— Eddie
 
 ---
 
